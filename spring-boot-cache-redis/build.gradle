@@ -1,0 +1,42 @@
+plugins {
+    id 'com.avast.gradle.docker-compose' version '0.14.9'
+    id 'org.springframework.boot' version '2.5.6'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id "io.freefair.lombok" version "6.3.0"
+    id 'java'
+}
+
+group = 'bono.poc'
+version = '1.0.0-SNAPSHOT'
+sourceCompatibility = '11'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // Redis client
+    implementation 'redis.clients:jedis:3.7.0'
+    // Mapstruct
+    implementation 'org.mapstruct:mapstruct:1.4.2.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.2.Final'
+    // Cache implementation
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+dockerCompose.isRequiredBy(test)
+dockerCompose.isRequiredBy(bootRun)
+
+dockerCompose {
+    useComposeFiles = ['docker/docker-compose.yml']
+    forceRecreate = true
+}
