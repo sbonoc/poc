@@ -7,6 +7,42 @@ services:
       - "6379:6379"
     volumes:
       - ./redis/redis-data:/var/lib/redis
-        - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
     environment:
       - REDIS_REPLICATION_MODE=master
+
+  redis_exporter:
+    image: oliver006/redis_exporter:alpine
+    ports:
+      - "9121:9121"
+    command: -redis.password 'replaceme' -redis.addr redis://redis:6379
+    links:
+      - redis:redis
+    depends_on:
+      - redis
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    links:
+      - redis_exporter:redis_exporter
+    depends_on:
+      - redis_exporter
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/config.ini:/etc/grafana/config.ini
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    links:
+      - prometheus:prometheus
+    depends_on:
+      - prometheus
+
+# host.docker.internal
