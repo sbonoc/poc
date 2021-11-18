@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -27,29 +27,17 @@ public class ProductService {
 
     @PostConstruct
     private void init() {
-        productRepository.saveAll(Arrays.asList(
+        productRepository.save(
                 ProductEntity
                         .builder()
                         .id("1")
-                        .name("Name 1")
-                        .description("Description 1")
-                        .price(1.0d)
-                        .build(),
-                ProductEntity
-                        .builder()
-                        .id("2")
-                        .name("Name 2")
-                        .description("Description 2")
-                        .price(2.0d)
-                        .build(),
-                ProductEntity
-                        .builder()
-                        .id("3")
-                        .name("Name 3")
-                        .description("Description 3")
-                        .price(3.0d)
+                        .fields(Map.of(
+                                "name", "Name 1",
+                                "description", "Description 1",
+                                "price", 1.0d
+                        ))
                         .build()
-        ));
+        );
     }
 
     public List<ProductModel> getProducts() {

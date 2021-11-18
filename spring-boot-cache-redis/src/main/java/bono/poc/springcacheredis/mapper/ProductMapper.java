@@ -9,9 +9,17 @@ import org.mapstruct.Mapper;
 public interface ProductMapper {
 
     ProductDto modelToDto(ProductModel productModel);
+
     ProductModel dtoToModel(ProductDto productDto);
 
-    ProductModel entityToModel(ProductEntity productEntity);
-    ProductEntity modelToEntity(ProductModel productModel);
+    default ProductModel entityToModel(ProductEntity productEntity) {
+        return ProductModel
+                .builder()
+                .id(String.valueOf(productEntity.getId()))
+                .name(String.valueOf(productEntity.getFields().get("name")))
+                .description(String.valueOf(productEntity.getFields().get("description")))
+                .price((Double) productEntity.getFields().get("price"))
+                .build();
+    }
 
 }
