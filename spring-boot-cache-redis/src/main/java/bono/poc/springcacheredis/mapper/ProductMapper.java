@@ -1,9 +1,9 @@
 package bono.poc.springcacheredis.mapper;
 
-import org.mapstruct.Mapper;
 import bono.poc.springcacheredis.dto.ProductDto;
 import bono.poc.springcacheredis.entity.ProductEntity;
 import bono.poc.springcacheredis.model.ProductModel;
+import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {

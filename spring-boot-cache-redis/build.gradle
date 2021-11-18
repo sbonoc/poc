@@ -1,9 +1,11 @@
 plugins {
     id 'com.avast.gradle.docker-compose' version '0.14.9'
+    id 'io.gatling.gradle' version '3.6.1'
     id 'org.springframework.boot' version '2.5.6'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id "io.freefair.lombok" version "6.3.0"
     id 'java'
+    id 'scala'
 }
 
 group = 'bono.poc'
@@ -33,10 +35,26 @@ test {
     useJUnitPlatform()
 }
 
+/* DOCKER COMPOSE CONFIG */
+
 dockerCompose.isRequiredBy(test)
 dockerCompose.isRequiredBy(bootRun)
 
 dockerCompose {
     useComposeFiles = ['docker/docker-compose.yml']
     forceRecreate = true
+}
+
+/* GATLING CONFIG */
+
+// See https://gatling.io/docs/gatling/reference/current/extensions/gradle_plugin/#plugin-configuration
+gatling {
+    includeMainOutput = false
+    includeTestOutput = true
+    logHttp = 'FAILURES'
+}
+
+// See https://gatling.io/docs/gatling/reference/current/extensions/gradle_plugin/#default-tasks
+tasks.withType(io.gatling.gradle.GatlingRunTask) {
+    outputs.upToDateWhen { false }
 }

@@ -1,15 +1,14 @@
 package bono.poc.springcacheredis.service;
 
+import bono.poc.springcacheredis.entity.ProductEntity;
 import bono.poc.springcacheredis.mapper.ProductMapper;
+import bono.poc.springcacheredis.model.ProductModel;
+import bono.poc.springcacheredis.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import bono.poc.springcacheredis.entity.ProductEntity;
-import bono.poc.springcacheredis.model.ProductModel;
-import bono.poc.springcacheredis.repository.ProductRepository;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
@@ -25,7 +24,6 @@ public class ProductService {
 
     private final ProductMapper productMapper;
     private final ProductRepository productRepository;
-    private final CacheManager cacheManager;
 
     @PostConstruct
     private void init() {
@@ -62,10 +60,18 @@ public class ProductService {
     }
 
     @Cacheable
-    public Optional<ProductModel> getProduct(String id) {
-        log.debug("Getting product with id {}", id);
+    public Optional<ProductModel> getProductUsingCaffeineCache(String id) {
+        log.debug("[getProductUsingCaffeineCache] Getting product with id {} from Redis (the central cache)", id);
+        return getProductModel(id);
+    }
+
+    public Optional<ProductModel> getProductWithoutCache(String id) {
+        log.debug("[getProductWithoutCache] Getting product with id {} from Redis (the central cache)", id);
+        return getProductModel(id);
+    }
+
+    private Optional<ProductModel> getProductModel(String id) {
         Optional<ProductEntity> productEntity = productRepository.findById(id);
-        log.debug("Product with id found? {}", productEntity.isPresent());
         return productEntity.map(productMapper::entityToModel);
     }
 
