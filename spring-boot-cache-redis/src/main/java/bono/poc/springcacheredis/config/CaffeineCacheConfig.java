@@ -10,33 +10,27 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.Objects;
+import org.springframework.context.annotation.Profile;
 
 @Slf4j
 @Configuration
 @EnableCaching
+@Profile("Caffeine")
 @ConfigurationProperties(prefix = "spring.cache.caffeine")
-public class CacheConfig {
+public class CaffeineCacheConfig extends BaseCacheConfig {
 
     @Getter
     @Setter
-    public String spec;
+    String spec;
 
     @Bean
-    public CacheManager cacheManager() {
+    CacheManager cacheManager() {
+        log.info("==== SETTING UP CAFFEINE CACHE ====");
         log.debug("Caffeine specifications {}", spec);
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
         cacheManager.setCaffeine(Caffeine.from(spec));
-        clearAllCaches(cacheManager);
+        super.clearAllCaches(cacheManager);
         return cacheManager;
     }
 
-    private void clearAllCaches(CaffeineCacheManager cacheManager) {
-        log.debug("Clearing all caches");
-        cacheManager.getCacheNames().forEach(name -> {
-            log.debug("Clearing cache with name {}", name);
-            Objects.requireNonNull(cacheManager.getCache(name)).clear();
-        });
-    }
 }

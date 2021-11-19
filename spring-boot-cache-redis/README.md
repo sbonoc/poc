@@ -15,7 +15,7 @@ The objective is to:
 
 * Reduce network activity
 * Reduce response time
-* See how to configure the different caches
+* See how to configure the different cache implementation for Spring Cache
 
 ## What's inside?
 
@@ -48,6 +48,12 @@ After `bootRun` task you can run the Gatling load tests with `./gradlew gatlingR
 to the HTML report.
 
 ## Step-by-step analysis
+
+### Spring Cache with Caffeine
+
+TODO
+
+### Spring Cache with Redisson
 
 TODO
 

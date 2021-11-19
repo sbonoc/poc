@@ -19,13 +19,13 @@ class SpringCacheRedisSimulation extends Simulation {
   val scn: ScenarioBuilder = scenario("Get from Products API")
     .exec(http("Get without Cache")
       .get("/product-api-without-cache/1"))
-    .exec(http("Get with Caffeine Cache")
+    .exec(http("Get with Cache")
       .get("/product-api-using-caffeine-cache/1"))
 
   setUp(
     scn.inject(
       nothingFor(1.seconds),
-      constantUsersPerSec(300).during(20.seconds)
+      constantUsersPerSec(300).during(30.seconds)
     ).protocols(httpProtocol)
   )
 }

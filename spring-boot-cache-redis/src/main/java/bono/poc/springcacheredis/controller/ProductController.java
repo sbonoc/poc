@@ -22,7 +22,7 @@ public class ProductController {
     @GetMapping("/products")
     public ResponseEntity<List<ProductDto>> getProducts() {
         return ResponseEntity.ok(
-                productService.getProducts().stream()
+                productService.getProductsWithoutCache().stream()
                         .map(productMapper::modelToDto)
                         .collect(Collectors.toList())
         );
@@ -35,7 +35,7 @@ public class ProductController {
 
     @GetMapping("/product-api-using-caffeine-cache/{id}")
     public ResponseEntity<ProductDto> getProductByIdUsingCaffeineCache(@PathVariable String id) {
-        return ResponseEntity.of(productService.getProductUsingCaffeineCache(id).map(productMapper::modelToDto));
+        return ResponseEntity.of(productService.getProductWithCache(id).map(productMapper::modelToDto));
     }
 
 }

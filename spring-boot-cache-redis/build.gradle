@@ -18,10 +18,14 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // Micrometer for Prometheus
+    implementation 'io.micrometer:micrometer-registry-prometheus:1.8.0'
     // Redis client
     implementation 'org.redisson:redisson-spring-boot-starter:3.16.4'
     // Mapstruct

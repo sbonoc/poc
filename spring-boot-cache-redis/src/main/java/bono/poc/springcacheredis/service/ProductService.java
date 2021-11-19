@@ -4,6 +4,8 @@ import bono.poc.springcacheredis.entity.ProductEntity;
 import bono.poc.springcacheredis.mapper.ProductMapper;
 import bono.poc.springcacheredis.model.ProductModel;
 import bono.poc.springcacheredis.repository.ProductRepository;
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheConfig;
@@ -18,9 +20,11 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-@CacheConfig(cacheNames = {"ProductsLocalCache"})
+@CacheConfig(cacheNames = {ProductService.CACHE_NAME})
 @RequiredArgsConstructor
 public class ProductService {
+
+    public static final String CACHE_NAME = "ProductsLocalCache";
 
     private final ProductMapper productMapper;
     private final ProductRepository productRepository;
@@ -52,19 +56,25 @@ public class ProductService {
         ));
     }
 
-    public List<ProductModel> getProducts() {
+    @Counted
+    @Timed
+    public List<ProductModel> getProductsWithoutCache() {
         Iterable<ProductEntity> found = productRepository.findAll();
         List<ProductModel> result = new ArrayList<>();
         found.forEach(productEntity -> result.add(productMapper.entityToModel(productEntity)));
         return result;
     }
 
+    @Counted
     @Cacheable
-    public Optional<ProductModel> getProductUsingCaffeineCache(String id) {
-        log.debug("[getProductUsingCaffeineCache] Getting product with id {} from Redis (the central cache)", id);
+    @Timed
+    public Optional<ProductModel> getProductWithCache(String id) {
+        log.debug("[getProductWithCache] Getting product with id {} from Redis (the central cache)", id);
         return getProductModel(id);
     }
 
+    @Counted
+    @Timed
     public Optional<ProductModel> getProductWithoutCache(String id) {
         log.debug("[getProductWithoutCache] Getting product with id {} from Redis (the central cache)", id);
         return getProductModel(id);
