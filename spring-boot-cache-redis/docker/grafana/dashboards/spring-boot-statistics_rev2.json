@@ -23,7 +23,7 @@
   "fiscalYearStartMonth": 0,
   "gnetId": 6756,
   "graphTooltip": 0,
-  "iteration": 1637401466897,
+  "iteration": 1637573519026,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -92,7 +92,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "cache_gets_total",
+          "expr": "rate(cache_gets_total{instance=\"$instance\",application=\"$application\"}[1m])",
           "interval": "",
           "legendFormat": "{{cache}} - {{result}}",
           "refId": "A"
@@ -2863,7 +2863,7 @@
     ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
