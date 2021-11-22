@@ -33,7 +33,7 @@ public class ProductController {
         return ResponseEntity.of(productService.getProductWithoutCache(id).map(productMapper::modelToDto));
     }
 
-    @GetMapping("/product-api-using-caffeine-cache/{id}")
+    @GetMapping("/product-api-with-cache/{id}")
     public ResponseEntity<ProductDto> getProductByIdUsingCaffeineCache(@PathVariable String id) {
         return ResponseEntity.of(productService.getProductWithCache(id).map(productMapper::modelToDto));
     }

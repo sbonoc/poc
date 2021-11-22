@@ -13,8 +13,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +24,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProductService {
 
+    public static final int PRODUCT_CATALOG_SIZE = 5000;
     public static final String CACHE_NAME = "ProductsLocalCache";
 
     private final ProductMapper productMapper;
@@ -31,29 +32,19 @@ public class ProductService {
 
     @PostConstruct
     private void init() {
-        productRepository.saveAll(Arrays.asList(
-                ProductEntity
-                        .builder()
-                        .id("1")
-                        .name("Name 1")
-                        .description("Description 1")
-                        .price(1.0d)
-                        .build(),
-                ProductEntity
-                        .builder()
-                        .id("2")
-                        .name("Name 2")
-                        .description("Description 2")
-                        .price(2.0d)
-                        .build(),
-                ProductEntity
-                        .builder()
-                        .id("3")
-                        .name("Name 3")
-                        .description("Description 3")
-                        .price(3.0d)
-                        .build()
-        ));
+        log.debug("==== INITIALIZING ====");
+        log.debug("Storing product catalog with {} products (this may take a while)", PRODUCT_CATALOG_SIZE);
+        for (int i = 1; i < (PRODUCT_CATALOG_SIZE + 1); i++) {
+            productRepository.save(
+                    ProductEntity.builder()
+                            .id(String.valueOf(i))
+                            .name(MessageFormat.format("Product {0} name", i))
+                            .description(MessageFormat.format("Product {0} description", i))
+                            .price((double) i)
+                            .build()
+            );
+        }
+        log.debug("Product catalog stored");
     }
 
     @Counted
