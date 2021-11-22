@@ -23,7 +23,7 @@
   "fiscalYearStartMonth": 0,
   "gnetId": 14091,
   "graphTooltip": 1,
-  "iteration": 1637318388202,
+  "iteration": 1637597070346,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -191,15 +191,17 @@
       "id": 18,
       "isNew": true,
       "legend": {
+        "alignAsTable": true,
         "avg": false,
         "current": false,
         "hideEmpty": false,
         "hideZero": false,
         "max": false,
         "min": false,
+        "rightSide": true,
         "show": true,
-        "total": false,
-        "values": false
+        "total": true,
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
@@ -300,15 +302,17 @@
       "id": 20,
       "isNew": true,
       "legend": {
-        "avg": false,
+        "alignAsTable": true,
+        "avg": true,
         "current": false,
         "hideEmpty": false,
         "hideZero": true,
-        "max": false,
-        "min": false,
+        "max": true,
+        "min": true,
+        "rightSide": true,
         "show": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
@@ -1471,7 +1475,7 @@
       },
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "prometheus",
           "value": "prometheus"
         },
