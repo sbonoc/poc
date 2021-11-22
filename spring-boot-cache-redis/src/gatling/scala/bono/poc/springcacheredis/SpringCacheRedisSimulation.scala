@@ -18,8 +18,7 @@ class SpringCacheRedisSimulation extends Simulation {
     .userAgentHeader("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:16.0) Gecko/20100101 Firefox/16.0")
 
   val productCatalogSize: Int = 5000;
-  val percentageOfProductsMoreVisited = 15;
-  val standardDeviation: Int = productCatalogSize / percentageOfProductsMoreVisited;
+  val standardDeviation: Int = productCatalogSize / 15;
   val mean: Int = productCatalogSize / 2;
 
   val productIdFeeder: Iterator[Map[String, Long]] = Iterator.continually(
