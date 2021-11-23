@@ -9,24 +9,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @RestController
 @RequiredArgsConstructor
 public class ProductController {
 
     private final ProductService productService;
     private final ProductMapper productMapper;
-
-    @GetMapping("/products")
-    public ResponseEntity<List<ProductDto>> getProducts() {
-        return ResponseEntity.ok(
-                productService.getProductsWithoutCache().stream()
-                        .map(productMapper::modelToDto)
-                        .collect(Collectors.toList())
-        );
-    }
 
     @GetMapping("/product-api-without-cache/{id}")
     public ResponseEntity<ProductDto> getProductByIdWithoutCache(@PathVariable String id) {

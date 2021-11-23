@@ -14,8 +14,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -45,15 +43,6 @@ public class ProductService {
             );
         }
         log.debug("Product catalog stored");
-    }
-
-    @Counted
-    @Timed
-    public List<ProductModel> getProductsWithoutCache() {
-        Iterable<ProductEntity> found = productRepository.findAll();
-        List<ProductModel> result = new ArrayList<>();
-        found.forEach(productEntity -> result.add(productMapper.entityToModel(productEntity)));
-        return result;
     }
 
     @Counted
