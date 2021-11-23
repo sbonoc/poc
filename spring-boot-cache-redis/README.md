@@ -80,7 +80,7 @@ Once you have the dependencies you can start using the
 but this will not work unless you configure the `CacheManager` bean with the desired implementation (explained in
 further sections).
 
-In this PoC we use the cache in `ProductService` class, see source
+In this PoC I use the Spring Cache annotations in `ProductService` class, see source
 code [here](https://github.com/sbonoc/poc/blob/master/spring-boot-cache-redis/src/main/java/bono/poc/springcacheredis/service/ProductService.java)
 .
 
@@ -98,7 +98,7 @@ called `getProductWithCache(String id)`.
 
 2. Add `prometheus` to the property `management.endpoints.web.exposure.include` in your `application.properties`
    or `application.yml`. Optionally and very useful, you can add `metrics` too, so you can browse all metrics available
-   via Spring Actuator's.
+   via Spring Actuator's endpoints.
 
 ### Spring Cache with Caffeine
 
@@ -108,6 +108,7 @@ TODO
 
 The open-source version of Redisson does not support local cache so this option is not fulfilling our needs for this
 PoC.
+
 [Redisson.pro](https://redisson.pro/) is the paid option and it does provide local cache which is what we want.
 
 In their Wiki you can see what are
