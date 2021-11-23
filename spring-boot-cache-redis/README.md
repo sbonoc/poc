@@ -15,7 +15,7 @@ The objective is to:
 
 * Reduce network activity
 * Reduce response time
-* See how to configure the different cache implementation for Spring Cache
+* See how to configure the different cache implementation for Spring Cache.
 
 ## What's inside?
 
@@ -100,11 +100,32 @@ called `getProductWithCache(String id)`.
    or `application.yml`. Optionally and very useful, you can add `metrics` too, so you can browse all metrics available
    via Spring Actuator's endpoints.
 
-### Spring Cache with Caffeine
+Once you've followed the points above you can see the metrics:
 
-TODO
+- [cache.eviction.weight](http://localhost:8080/actuator/metrics/cache.eviction.weight)
+- [cache.evictions](http://localhost:8080/actuator/metrics/cache.evictions)
+- [cache.gets](http://localhost:8080/actuator/metrics/cache.gets)
+- [cache.puts](http://localhost:8080/actuator/metrics/cache.puts)
+- [cache.size](http://localhost:8080/actuator/metrics/cache.size)
 
-### Spring Cache with Redisson
+See official Spring Boot Actuator's documentation
+[here](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.supported.cache)
+
+### Caffeine implementation
+
+Caffeine is the successor of Guava in Spring Cache, see official
+documentation [here](https://github.com/ben-manes/caffeine/wiki).
+
+1. Add the dependency `com.github.ben-manes.caffeine:caffeine` (Spring Boot Gradle plugin will manage the version for
+   you)
+2. Add desired configuration in the property `spring.cache.caffeine.spec` of your `application.properties`
+   or `application.yml` file. See all possible values [here](https://github.com/ben-manes/caffeine/wiki/Specification).
+3. If you want to have metrics, add `recordStats` to `spring.cache.caffeine.spec`.
+4. Configure the `@Bean CacheManager` to use `CaffeineCacheManager` implementation. See `CaffeineCacheConfig` class
+   [here](https://github.com/sbonoc/poc/blob/master/spring-boot-cache-redis/src/main/java/bono/poc/springcacheredis/config/CaffeineCacheConfig.java)
+   .
+
+### Redisson implementation
 
 The open-source version of Redisson does not support local cache so this option is not fulfilling our needs for this
 PoC.
