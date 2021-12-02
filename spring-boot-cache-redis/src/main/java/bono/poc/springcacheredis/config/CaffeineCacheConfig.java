@@ -11,14 +11,13 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Primary;
 
 import java.util.Collections;
 
 @Slf4j
 @Configuration
 @EnableCaching
-@Profile("Caffeine")
 @ConfigurationProperties(prefix = "spring.cache.caffeine")
 public class CaffeineCacheConfig extends BaseCacheConfig {
 
@@ -27,7 +26,8 @@ public class CaffeineCacheConfig extends BaseCacheConfig {
     String spec;
 
     @Bean
-    CacheManager cacheManager() {
+    @Primary
+    CacheManager caffeineCacheManager() {
         log.info("==== SETTING UP CAFFEINE CACHE ====");
         log.debug("Caffeine specifications {}", spec);
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();

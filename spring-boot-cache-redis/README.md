@@ -36,13 +36,7 @@ The objective is to:
 
 ## How to run it?
 
-Just run `./gradlew bootRun --args='--spring.profiles.active=$PROFILE'`, this task will start the docker-compose and the
-Spring Boot application.
-
-`$PROFILE` possible values are:
-
-* `Caffeine` (Default)
-* `Redisson`
+Just run `./gradlew bootRun`, this task will start the docker-compose and the Spring Boot application.
 
 Here you have the URLs for each component:
 

@@ -30,8 +30,10 @@ class SpringCacheRedisSimulation extends Simulation {
     scenario(s"Get productId=$mean with & without cache")
       .exec(http("Constant no-cache")
         .get(s"/product-api-without-cache/$mean")
-      ).exec(http("Constant cache")
-      .get(s"/product-api-with-cache/$mean"))
+      ).exec(http("Constant Redisson")
+      .get(s"/product-api-with-redisson-cache/$mean"))
+      .exec(http("Constant Caffeine")
+        .get(s"/product-api-with-caffeine-cache/$mean"))
 
   val scnClearAllCaches: ScenarioBuilder =
     scenario("Clear all caches using Spring Actuator")
@@ -43,8 +45,10 @@ class SpringCacheRedisSimulation extends Simulation {
       .feed(productIdFeeder)
       .exec(http("Gaussian no-cache")
         .get("/product-api-without-cache/${productId}")
-      ).exec(http("Gaussian cache")
-      .get("/product-api-with-cache/${productId}"))
+      ).exec(http("Gaussian Redisson")
+      .get("/product-api-with-redisson-cache/${productId}"))
+      .exec(http("Gaussian Caffeine")
+        .get("/product-api-with-caffeine-cache/${productId}"))
 
   val requestPerSecondMax: Double = 150d
 

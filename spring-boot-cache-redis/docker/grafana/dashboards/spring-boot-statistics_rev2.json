@@ -23,7 +23,7 @@
   "fiscalYearStartMonth": 0,
   "gnetId": 6756,
   "graphTooltip": 0,
-  "iteration": 1637596742289,
+  "iteration": 1638437414626,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -926,13 +926,73 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "rate(cache_gets_total{instance=\"$instance\",application=\"$application\"}[1m])",
+          "expr": "rate(cache_gets_total{instance=\"$instance\",application=\"$application\",cacheManager=\"caffeine\"}[1m])",
           "interval": "",
-          "legendFormat": "{{cache}} - {{result}}",
+          "legendFormat": "{{cache}} ({{cacheManager}}) - {{result}}",
           "refId": "A"
         }
       ],
-      "title": "Cache hit/miss ratio",
+      "title": "Cache hit/miss ratio (caffeine)",
+      "type": "piechart"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 6,
+        "x": 6,
+        "y": 3
+      },
+      "id": 127,
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "values": [
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "rate(cache_gets_total{instance=\"$instance\",application=\"$application\",cacheManager=\"redisson\"}[1m])",
+          "interval": "",
+          "legendFormat": "{{cache}} ({{cacheManager}}) - {{result}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Cache hit/miss ratio (redisson)",
       "type": "piechart"
     },
     {
@@ -989,8 +1049,8 @@
       },
       "gridPos": {
         "h": 10,
-        "w": 18,
-        "x": 6,
+        "w": 12,
+        "x": 12,
         "y": 3
       },
       "id": 119,
@@ -1015,7 +1075,7 @@
           "expr": "irate(cache_gets_total{instance=\"$instance\",application=\"$application\"}[1m])",
           "hide": false,
           "interval": "",
-          "legendFormat": "{{cache}} - gets ({{result}})",
+          "legendFormat": "{{cache}} ({{cacheManager}})- gets ({{result}})",
           "refId": "A"
         },
         {
@@ -1023,7 +1083,7 @@
           "expr": "irate(cache_puts_total{instance=\"$instance\",application=\"$application\"}[1m])",
           "hide": false,
           "interval": "",
-          "legendFormat": "{{cache}} - puts",
+          "legendFormat": "{{cache}} ({{cacheManager}}) - puts",
           "refId": "B"
         },
         {
@@ -1031,7 +1091,7 @@
           "expr": "irate(cache_evictions_total{instance=\"$instance\",application=\"$application\"}[1m])",
           "hide": false,
           "interval": "",
-          "legendFormat": "{{cache}} - evictions",
+          "legendFormat": "{{cache}} ({{cacheManager}}) - evictions",
           "refId": "C"
         }
       ],
