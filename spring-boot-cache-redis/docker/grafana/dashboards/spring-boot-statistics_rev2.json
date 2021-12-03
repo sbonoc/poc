@@ -23,7 +23,7 @@
   "fiscalYearStartMonth": 0,
   "gnetId": 6756,
   "graphTooltip": 0,
-  "iteration": 1637596742289,
+  "iteration": 1638456601964,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -928,7 +928,7 @@
           "exemplar": true,
           "expr": "rate(cache_gets_total{instance=\"$instance\",application=\"$application\"}[1m])",
           "interval": "",
-          "legendFormat": "{{cache}} - {{result}}",
+          "legendFormat": "{{cache}} - {{result}} ({{cacheManager}})",
           "refId": "A"
         }
       ],

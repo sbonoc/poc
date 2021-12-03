@@ -31,8 +31,12 @@ dependencies {
     // Mapstruct
     implementation 'org.mapstruct:mapstruct:1.4.2.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.2.Final'
-    // Cache implementation
+    // Caffeine cache implementation
     implementation 'com.github.ben-manes.caffeine:caffeine'
+    // EhCache cache implementation
+    implementation 'org.ehcache:ehcache'
+    implementation 'com.sun.xml.bind:jaxb-ri:2.3.4'
+
 }
 
 test {
