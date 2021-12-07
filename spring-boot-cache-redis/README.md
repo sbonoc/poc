@@ -147,11 +147,14 @@ Ehcache is probably the oldest and most used cache for Java which is following t
 specification, see their [official website](https://www.ehcache.org/) for further information.
 
 1. Add the dependency `org.ehcache:ehcache` (again, Spring Boot Gradle plugin will manage the version for you)
-2. Create the file `ehcache.xml` in the `src/main/resources` folder and put your configuration following the official
+2. Add the dependency `com.sun.xml.bind:jaxb-ri` the latest `2.x.x` version ... this is needed because ehcache's config
+   file is in XML and it uses the old `javax.xml.bind` which was deprecated in Java 9 and removed in Java 11, see
+   [Java 11 release notes](https://www.oracle.com/java/technologies/javase/11-relnote-issues.html#JDK-8190378).
+3. Create the file `ehcache.xml` in the `src/main/resources` folder and put your configuration following the official
    documentation [here](https://www.ehcache.org/documentation/3.9/xml.html)
-3. If you want to have metrics add the set `enable-statistics="true"` in the XML for the JSR-107 extension, see
+4. If you want to have metrics add the set `enable-statistics="true"` in the XML for the JSR-107 extension, see
    ehcache.xml.
-4. Add the properties below to your `application.properties` or `application.yml`:
+5. Add the properties below to your `application.properties` or `application.yml`:
 
 ```
 spring.cache.jcache.config=classpath:ehcache.xml
