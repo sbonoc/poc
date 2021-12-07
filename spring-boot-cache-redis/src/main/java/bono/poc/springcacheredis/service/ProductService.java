@@ -45,17 +45,17 @@ public class ProductService {
         log.debug("Product catalog stored");
     }
 
+    @Timed
     @Counted
     @Cacheable
-    @Timed
-    public Optional<ProductModel> getProductWithCache(String id) {
+    public Optional<ProductModel> getProductFromRedisWithCache(String id) {
         log.debug("[getProductWithCache] Getting product with id {} from Redis (the central cache)", id);
         return getProductModel(id);
     }
 
-    @Counted
     @Timed
-    public Optional<ProductModel> getProductWithoutCache(String id) {
+    @Counted
+    public Optional<ProductModel> getProductFromRedisWithoutCache(String id) {
         log.debug("[getProductWithoutCache] Getting product with id {} from Redis (the central cache)", id);
         return getProductModel(id);
     }
