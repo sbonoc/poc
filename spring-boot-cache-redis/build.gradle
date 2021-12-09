@@ -36,6 +36,9 @@ dependencies {
     // EhCache cache implementation
     implementation 'org.ehcache:ehcache'
     implementation 'com.sun.xml.bind:jaxb-ri:2.3.4'
+    // Geode cache implementation
+    implementation 'org.springframework.geode:spring-geode-starter:1.6.1'
+    implementation 'org.springframework.geode:spring-geode-starter-actuator:1.5.6'
 
 }
 

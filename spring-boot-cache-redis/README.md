@@ -152,13 +152,31 @@ specification, see their [official website](https://www.ehcache.org/) for furthe
    [Java 11 release notes](https://www.oracle.com/java/technologies/javase/11-relnote-issues.html#JDK-8190378).
 3. Create the file `ehcache.xml` in the `src/main/resources` folder and put your configuration following the official
    documentation [here](https://www.ehcache.org/documentation/3.9/xml.html)
-4. If you want to have metrics add the set `enable-statistics="true"` in the XML for the JSR-107 extension, see
-   ehcache.xml.
+4. If you want to have metrics add the setting `enable-statistics="true"` in the XML for the JSR-107 extension, see
+   [ehcache.xml](src/main/resources/ehcache.xml).
 5. Add the properties below to your `application.properties` or `application.yml`:
 
 ```
 spring.cache.jcache.config=classpath:ehcache.xml
 spring.cache.jcache.provider=org.ehcache.jsr107.EhcacheCachingProvider
+```
+
+### Apache Geode (Gemfire) implementation
+
+1. Add the
+   dependency `org.springframework.geode:spring-geode-starter:${latest_version}` ([check version in maven repo](https://mvnrepository.com/artifact/org.springframework.geode/spring-geode-starter))
+   .
+2. Add the
+   ddependency `org.springframework.geode:spring-geode-starter-actuator:${latest_version}` ([check version in maven repo](https://mvnrepository.com/artifact/org.springframework.geode/spring-geode-starter-actuator))
+3. Create the file `cache.xml` in the `src/main/resources` folder and put your configuration following the official
+   documentation [here](https://geode.apache.org/docs/guide/114/reference/topics/chapter_overview_cache_xml.html)
+4. If you want to have metrics add the properties below to your `application.properties` or `application.yml` (but there
+   is one problem, they will not be exported to prometheus endpoints, they are only available via `/actuator/health`
+   endpoint):
+
+```
+management.endpoint.health.show-details=always
+spring.data.gemfire.stats.enable-time-statistics=true
 ```
 
 ## Conclusion

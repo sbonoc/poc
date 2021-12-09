@@ -34,12 +34,12 @@ public class ProductService {
         log.debug("Storing product catalog with {} products (this may take a while)", PRODUCT_CATALOG_SIZE);
         for (int i = 1; i < (PRODUCT_CATALOG_SIZE + 1); i++) {
             productRepository.save(
-                    ProductEntity.builder()
-                            .id(String.valueOf(i))
-                            .name(MessageFormat.format("Product {0} name", i))
-                            .description(MessageFormat.format("Product {0} description", i))
-                            .price((double) i)
-                            .build()
+                ProductEntity.builder()
+                    .id(String.valueOf(i))
+                    .name(MessageFormat.format("Product {0} name", i))
+                    .description(MessageFormat.format("Product {0} description", i))
+                    .price((double) i)
+                    .build()
             );
         }
         log.debug("Product catalog stored");
