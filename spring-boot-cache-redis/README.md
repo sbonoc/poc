@@ -6,7 +6,10 @@ Redis is a well-known in-memory data store, broadly used as cache (among other u
 component in the architecture adding latency to the overall response time that is also sensitive to the load of the
 system as any other one.
 
-In this PoC I want to:
+A better approach would be to cache within the application's memory and retrieved it from Redis only when is missing.
+Getting the data from the memory directly will be a way much faster than going to Redis throught the network.
+
+In this PoC I want to check what are the different Spring Cache implementations that I have found so far so that I can:
 
 * Use Redis as central cache
 * Use the application's JVM memory as local cache
@@ -32,7 +35,7 @@ The objective is to:
   - [Spring Data Redis](https://docs.spring.io/spring-data/data-redis/docs/current/reference/html/#reference)
     with [Redisson Spring Boot Starter](https://github.com/redisson/redisson/tree/master/redisson-spring-boot-starter)
   - [Spring Cache](https://docs.spring.io/spring-framework/docs/current/reference/html/integration.html#cache)
-    with [Caffeine](https://github.com/ben-manes/caffeine) implementation
+    that we will configure with different implementations in this PoC.
 
 ## How to run it?
 
@@ -42,7 +45,9 @@ Spring Boot application.
 `$PROFILE` possible values are:
 
 * `Caffeine` (Default)
-* `Redisson`
+* `EhCache`
+* `Geode`
+* `JdkConcurrentMap`
 
 Here you have the URLs for each component:
 
@@ -88,7 +93,7 @@ The class is annotated with `@CacheConfig(cacheNames = {ProductService.CACHE_NAM
 where `CACHE_NAME="ProductLocalCache"`, and has several methods but only one with `@Cacheable` annotation
 called `getProductWithCache(String id)`.
 
-### How-to get metrics from Spring Cache to Prometheus
+### How-to expose Spring Cache metrics for Prometheus
 
 1. Add the dependencies:
 
@@ -111,6 +116,20 @@ Once you've followed the points above you can see the metrics:
 See official Spring Boot Actuator's documentation
 [here](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.supported.cache)
 
+### JDK ConcurrentMapCache implementation
+
+This is the simplest implementation, is fast, no need for extra libraries, works but lacks useful capabilities to
+consider it production-ready, like monitoring, eviction contracts, etc.
+
+To use it is as simple as configure the `@Bean CacheManager` to use `ConcurrentMapCacheManager` implementation.
+See `JdkConcurrentMapCacheConfig`
+class [here](https://github.com/sbonoc/poc/blob/master/spring-boot-cache-redis/src/main/java/bono/poc/springcacheredis/config/JdkConcurrentMapCacheConfig.java)
+
+#### Performance
+
+![Method invocations performance](./readme-resources/method-jdkconcurrentmapcache.png)
+![Gatling result for JDK ConcurrentMapCache](./readme-resources/gatling-jdkconcurrentmapcache.png)
+
 ### Caffeine implementation
 
 Caffeine is the successor of Guava in Spring Cache, see official
@@ -125,6 +144,11 @@ documentation [here](https://github.com/ben-manes/caffeine/wiki).
    [here](https://github.com/sbonoc/poc/blob/master/spring-boot-cache-redis/src/main/java/bono/poc/springcacheredis/config/CaffeineCacheConfig.java)
    .
 
+#### Performance
+
+![Method invocations performance](./readme-resources/method-caffeine.png)
+![Gatling result for Caffeine](./readme-resources/gatling-caffeine.png)
+
 ### Redisson implementation
 
 The open-source version of Redisson does not support local cache so this option is not fulfilling our needs for this
@@ -134,12 +158,10 @@ PoC.
 
 In their Wiki you can see what are
 the [different integrations with Spring](https://github.com/redisson/redisson/wiki/14.-Integration-with-frameworks), in
-this case we are interested on using one of these two cache managers:
+this case, for what we want to achieve in this PoC, we would use one of these two cache managers:
 
 - org.redisson.spring.cache.RedissonSpringLocalCachedCacheManager
 - org.redisson.spring.cache.RedissonClusteredSpringLocalCachedCacheManager
-
-I've asked for a trial version ... as soon as I have an answer I will try and put here some analysis.
 
 ### Ehcache implementation
 
@@ -161,23 +183,36 @@ spring.cache.jcache.config=classpath:ehcache.xml
 spring.cache.jcache.provider=org.ehcache.jsr107.EhcacheCachingProvider
 ```
 
+#### Performance
+
+![Method invocations performance](./readme-resources/method-ehcache.png)
+![Gatling result for EhCache](./readme-resources/gatling-ehcache.png)
+
 ### Apache Geode (Gemfire) implementation
+
+[Apache Geode](https://geode.apache.org/) is a very robust with low latency and high concurrency data management
+platform.
 
 1. Add the
    dependency `org.springframework.geode:spring-geode-starter:${latest_version}` ([check version in maven repo](https://mvnrepository.com/artifact/org.springframework.geode/spring-geode-starter))
    .
 2. Add the
-   ddependency `org.springframework.geode:spring-geode-starter-actuator:${latest_version}` ([check version in maven repo](https://mvnrepository.com/artifact/org.springframework.geode/spring-geode-starter-actuator))
+   dependency `org.springframework.geode:spring-geode-starter-actuator:${latest_version}` ([check version in maven repo](https://mvnrepository.com/artifact/org.springframework.geode/spring-geode-starter-actuator))
 3. Create the file `cache.xml` in the `src/main/resources` folder and put your configuration following the official
    documentation [here](https://geode.apache.org/docs/guide/114/reference/topics/chapter_overview_cache_xml.html)
-4. If you want to have metrics add the properties below to your `application.properties` or `application.yml` (but there
+4. If you want to have metrics add the properties below to your `application.properties` or `application.yml` but there
    is one problem, they will not be exported to prometheus endpoints, they are only available via `/actuator/health`
-   endpoint):
+   endpoint:
 
 ```
 management.endpoint.health.show-details=always
 spring.data.gemfire.stats.enable-time-statistics=true
 ```
+
+#### Performance
+
+![Method invocations performance](./readme-resources/method-geode.png)
+![Gatling result for Geode](./readme-resources/gatling-geode.png)
 
 ## Conclusion
 
