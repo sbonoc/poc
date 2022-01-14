@@ -43,11 +43,10 @@ Just run `./gradlew bootRun --args='--spring.profiles.active=$PROFILE'`, this ta
 Spring Boot application.
 
 `$PROFILE` possible values are:
-
+* `JdkConcurrentMap`
 * `Caffeine` (Default)
 * `EhCache`
 * `Geode`
-* `JdkConcurrentMap`
 
 Here you have the URLs for each component:
 
@@ -216,4 +215,32 @@ spring.data.gemfire.stats.enable-time-statistics=true
 
 ## Conclusion
 
-TODO
+In order to make a decision we need some criteria.
+
+Minimum requirements:
+
+* Can be configured, so that at least we can control what's the size of the cache and the expiration.
+* Can be manage via Spring Actuator, so that we can make operations easily and in a "Spring standard" way.
+* Has metrics that can be exported to Prometheus, so we can monitor the cache.
+
+| Implementation   | Configurable? | Can be managed via Actuator? | Has Prometheus metrics? | Does fulfill min requirements? |
+|------------------|---------------|------------------------------|-------------------------|--------------------------------|
+| JdkConcurrentMap | No            | No                           | No                      | No                             |
+| Caffeine         | Yes           | Yes                          | Yes                     | Yes                            |
+| EhCache          | Yes           | Yes                          | Yes                     | Yes                            |
+| Geode            | Yes           | Yes                          | No                      | No                             |
+
+JdkConcurrentMap & Geode are out because they don't fulfill the minimum requirements I consider.
+
+Now, from the ones left, which one is the fastest?
+
+| Implementation | 95th pct Gaussian Cache | 99th pct Gaussian Cache | Min getProductByIdWithCache latency | Max getProductByIdWithCache latency | Avg getProductByIdWithCache latency |
+|----------------|-------------------------|-------------------------|-------------------------------------|-------------------------------------|-------------------------------------|
+| Caffeine       | 5 ms                    | 8 ms                    | 52.3 µs                             | 2.05 ms                             | 1.49 ms                             |
+| EhCache        | 6 ms                    | 13 ms                   | 35.3 µs                             | 3.55 ms                             | 2.21 ms                             |
+
+Taking a look to the 95th & 99th percentile of the API and the average latency for the method `getProductByIdWithCache`,
+Caffeine was faster so ... Caffeine is the winner!
+
+However, I would not rely a lot on these numbers. To be 100% sure, I would repeat the test in the target infrastructure
+with the real application where we want to use this cache.
