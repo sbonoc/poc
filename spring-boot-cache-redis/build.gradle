@@ -1,16 +1,16 @@
 plugins {
-    id 'com.avast.gradle.docker-compose' version '0.14.9'
-    id 'io.gatling.gradle' version '3.6.1'
-    id 'org.springframework.boot' version '2.5.6'
+    id 'com.avast.gradle.docker-compose' version '0.16.3'
+    id 'io.gatling.gradle' version '3.7.6.2'
+    id 'org.springframework.boot' version '2.6.7'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-    id "io.freefair.lombok" version "6.3.0"
+    id "io.freefair.lombok" version "6.4.3"
     id 'java'
     id 'scala'
 }
 
 group = 'bono.poc'
 version = '1.0.0-SNAPSHOT'
-sourceCompatibility = '11'
+sourceCompatibility = '18'
 
 repositories {
     mavenLocal()
@@ -25,9 +25,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     // Micrometer for Prometheus
-    implementation 'io.micrometer:micrometer-registry-prometheus:1.8.0'
+    implementation 'io.micrometer:micrometer-registry-prometheus:1.8.5'
     // Redis client
-    implementation 'org.redisson:redisson-spring-boot-starter:3.16.4'
+    implementation 'org.redisson:redisson-spring-boot-starter:3.17.1'
     // Mapstruct
     implementation 'org.mapstruct:mapstruct:1.4.2.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.2.Final'
@@ -35,10 +35,10 @@ dependencies {
     implementation 'com.github.ben-manes.caffeine:caffeine'
     // EhCache cache implementation
     implementation 'org.ehcache:ehcache'
-    implementation 'com.sun.xml.bind:jaxb-ri:2.3.4'
+    implementation 'com.sun.xml.bind:jaxb-ri:2.3.6'
     // Geode cache implementation
-    implementation 'org.springframework.geode:spring-geode-starter:1.6.1'
-    implementation 'org.springframework.geode:spring-geode-starter-actuator:1.5.6'
+    implementation 'org.springframework.geode:spring-geode-starter:1.6.7'
+    implementation 'org.springframework.geode:spring-geode-starter-actuator:1.6.7'
 
 }
 
