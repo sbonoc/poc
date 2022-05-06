@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+
+  frontend:
+    container_name: frontend
+    image: frontend
+    build:
+      context: ../frontend
+      target: development
+    volumes:
+      - ../frontend/src:/app/src
+    ports:
+      - 3001:3000

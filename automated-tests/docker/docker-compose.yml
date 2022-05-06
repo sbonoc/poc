@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+
+  frontend:
+    container_name: frontend
+    image: frontend
+    build:
+      context: ../frontend
+      target: production
+    ports:
+      - 3001:80
