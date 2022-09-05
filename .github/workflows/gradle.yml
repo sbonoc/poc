@@ -38,4 +38,4 @@ jobs:
       with:
         build-root-directory: spring-boot-cache-redis
     - name: Execute Gradle build
-      run: ./gradlew build
+      run: ./gradlew build --stacktrace
