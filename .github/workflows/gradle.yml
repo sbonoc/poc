@@ -20,6 +20,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: spring-boot-cache-redis
 
     steps:
     - uses: actions/checkout@v3
@@ -32,4 +35,3 @@ jobs:
       uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
       with:
         arguments: build
-        working-directory: spring-boot-cache-redis
