@@ -35,9 +35,13 @@ jobs:
         driver: docker-container
         driver-opts: |
           network=host
+    - shell: bash
+      run: |
+        echo #### YEAH ####
+        echo DOCKER_HOST=${DOCKER_HOST}
     - name: Setup Gradle
       uses: gradle/gradle-build-action@v2
       with:
         build-root-directory: spring-boot-cache-redis
     - name: Execute Gradle build
-      run: ./gradlew build --stacktrace
+      run: echo DOCKER_HOST=${DOCKER_HOST}; ./gradlew build --stacktrace
