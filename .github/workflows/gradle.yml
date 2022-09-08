@@ -31,9 +31,9 @@ jobs:
         image: redis:7-alpine
         ports:
           - "6379:6379"
-        volumes:
-          - ${{ github.workspace }}/spring-boot-cache-redis/docker/redis/redis-data:/var/lib/redis
-          - ${{ github.workspace }}/spring-boot-cache-redis/docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+#        volumes:
+#          - ${{ github.workspace }}/spring-boot-cache-redis/docker/redis/redis-data:/var/lib/redis
+#          - ${{ github.workspace }}/spring-boot-cache-redis/docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
         env:
           REDIS_REPLICATION_MODE: master
         options: >-
