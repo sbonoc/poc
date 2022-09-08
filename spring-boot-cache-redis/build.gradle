@@ -48,8 +48,8 @@ test {
 
 /* DOCKER COMPOSE CONFIG */
 
-//dockerCompose.isRequiredBy(test)
-//dockerCompose.isRequiredBy(bootRun)
+dockerCompose.isRequiredBy(test)
+dockerCompose.isRequiredBy(bootRun)
 
 dockerCompose {
     useComposeFiles = ['docker/docker-compose.yml']
