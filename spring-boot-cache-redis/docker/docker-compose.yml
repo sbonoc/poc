@@ -17,59 +17,59 @@ services:
       timeout: 3s
       retries: 30
 
-  redis_exporter:
-    image: oliver006/redis_exporter:v1.37.0-alpine
-    ports:
-      - "9121:9121"
-    command: -redis.password 'replaceme' -redis.addr redis://redis:6379
-    links:
-      - redis:redis
-    depends_on:
-      redis:
-        condition: service_healthy
-    network_mode: bridge
-    healthcheck:
-      test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:9121/health" ]
-      interval: 1s
-      timeout: 3s
-      retries: 30
-
-  prometheus:
-    image: prom/prometheus:v2.35.0
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    links:
-      - redis_exporter:redis_exporter
-    depends_on:
-      redis_exporter:
-        condition: service_healthy
-    network_mode: bridge
-    healthcheck:
-      test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:9090/-/healthy" ]
-      interval: 1s
-      timeout: 3s
-      retries: 30
-
-  grafana:
-    image: grafana/grafana:8.5.2
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/config.ini:/etc/grafana/config.ini
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
-    links:
-      - prometheus:prometheus
-    depends_on:
-      prometheus:
-        condition: service_healthy
-    network_mode: bridge
-    healthcheck:
-      test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:3000/api/health" ]
-      interval: 1s
-      timeout: 3s
-      retries: 30
+#  redis_exporter:
+#    image: oliver006/redis_exporter:v1.37.0-alpine
+#    ports:
+#      - "9121:9121"
+#    command: -redis.password 'replaceme' -redis.addr redis://redis:6379
+#    links:
+#      - redis:redis
+#    depends_on:
+#      redis:
+#        condition: service_healthy
+#    network_mode: bridge
+#    healthcheck:
+#      test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:9121/health" ]
+#      interval: 1s
+#      timeout: 3s
+#      retries: 30
+#
+#  prometheus:
+#    image: prom/prometheus:v2.35.0
+#    ports:
+#      - "9090:9090"
+#    volumes:
+#      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+#    links:
+#      - redis_exporter:redis_exporter
+#    depends_on:
+#      redis_exporter:
+#        condition: service_healthy
+#    network_mode: bridge
+#    healthcheck:
+#      test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:9090/-/healthy" ]
+#      interval: 1s
+#      timeout: 3s
+#      retries: 30
+#
+#  grafana:
+#    image: grafana/grafana:8.5.2
+#    ports:
+#      - "3000:3000"
+#    volumes:
+#      - ./grafana/provisioning:/etc/grafana/provisioning
+#      - ./grafana/config.ini:/etc/grafana/config.ini
+#      - ./grafana/dashboards:/var/lib/grafana/dashboards
+#    links:
+#      - prometheus:prometheus
+#    depends_on:
+#      prometheus:
+#        condition: service_healthy
+#    network_mode: bridge
+#    healthcheck:
+#      test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:3000/api/health" ]
+#      interval: 1s
+#      timeout: 3s
+#      retries: 30
 
 # host.docker.internal
