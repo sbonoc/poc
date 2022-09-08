@@ -60,10 +60,10 @@ jobs:
 #        chmod 755 $DESTINATION
 #        docker version
 #        docker-compose version
-#    - name: Start Docker Compose
-#      run: |
-#        docker compose -f docker/docker-compose.yml up -d
-#        docker ps
+    - name: Start Docker Compose
+      run: |
+        #docker compose -f docker/docker-compose.yml up -d
+        docker ps
 #        echo "curl -v http://localhost:9121/health"
 #        curl -v http://localhost:9121/health
 #        echo "curl -v http://localhost:9090/-/healthy"
@@ -84,6 +84,6 @@ jobs:
         REDIS_PORT: 6379
     - name: Execute Gradle build
       run: ./gradlew build --full-stacktrace --scan
-    - name: Stop Docker Compose
-      if: ${{ always() }}
-      run: docker compose -f docker/docker-compose.yml down
+#    - name: Stop Docker Compose
+#      if: ${{ always() }}
+#      run: docker compose -f docker/docker-compose.yml down
