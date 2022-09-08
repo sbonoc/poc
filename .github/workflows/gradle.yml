@@ -48,6 +48,7 @@ jobs:
       run: |
         docker compose -f docker/docker-compose.yml up -d redis
         docker ps
+        docker inspect docker-redis-1
 #        echo "curl -v http://localhost:9121/health"
 #        curl -v http://localhost:9121/health
 #        echo "curl -v http://localhost:9090/-/healthy"
