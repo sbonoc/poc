@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     #container: node:slim
 
+
     defaults:
       run:
         working-directory: spring-boot-cache-redis
