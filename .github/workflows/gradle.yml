@@ -96,18 +96,18 @@ jobs:
 #        chmod 755 $DESTINATION
 #        docker version
 #        docker-compose version
-    - name: Start Docker Compose
-      run: |
-        apt-get update
-        apt-get install --yes curl
-        #docker compose -f docker/docker-compose.yml up -d
-        #docker ps
-        echo "curl -v http://localhost:9121/health"
-        curl -v http://localhost:9121/health
-        echo "curl -v http://localhost:9090/-/healthy"
-        curl -v http://localhost:9090/-/healthy
-        echo "curl -v --retry-connrefused --retry-max-time 30 --retry 10 http://localhost:3000/api/health"
-        curl -v --retry-connrefused --retry-max-time 30 --retry 10 http://localhost:3000/api/health
+#    - name: Start Docker Compose
+#      run: |
+#        apt-get update
+#        apt-get install --yes curl
+#        docker compose -f docker/docker-compose.yml up -d
+#        docker ps
+#        echo "curl -v http://localhost:9121/health"
+#        curl -v http://localhost:9121/health
+#        echo "curl -v http://localhost:9090/-/healthy"
+#        curl -v http://localhost:9090/-/healthy
+#        echo "curl -v --retry-connrefused --retry-max-time 30 --retry 10 http://localhost:3000/api/health"
+#        curl -v --retry-connrefused --retry-max-time 30 --retry 10 http://localhost:3000/api/health
     - name: Setup Java
       uses: actions/setup-java@v3
       with:
