@@ -46,7 +46,7 @@ jobs:
         docker-compose version
     - name: Start Docker Compose
       run: |
-        #docker compose -f docker/docker-compose.yml up -d redis
+        docker compose -f docker/docker-compose.yml up -d redis
         docker ps
 #        echo "curl -v http://localhost:9121/health"
 #        curl -v http://localhost:9121/health
