@@ -41,42 +41,42 @@ jobs:
           --health-interval 1s
           --health-timeout 3s
           --health-retries 30
-      redis_exporter:
-        image: oliver006/redis_exporter:v1.37.0-alpine
-        ports:
-          - "9121:9121"
-        options: >-
-          --link redis
-          --health-cmd "wget -q -O - http://localhost:9121/health"
-          --health-interval 1s
-          --health-timeout 3s
-          --health-retries 30
-      prometheus:
-        image: prom/prometheus:v2.35.0
-        ports:
-          - "9090:9090"
-        volumes:
-          - ${{ github.workspace }}/spring-boot-cache-redis/docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-        options: >-
-          --link redis_exporter
-          --health-cmd "wget -q -O - http://localhost:9090/-/healthy"
-          --health-interval 1s
-          --health-timeout 3s
-          --health-retries 30
-      grafana:
-        image: grafana/grafana:8.5.2
-        ports:
-          - "3000:3000"
-        volumes:
-          - ${{ github.workspace }}/spring-boot-cache-redis/docker/grafana/provisioning:/etc/grafana/provisioning
-          - ${{ github.workspace }}/spring-boot-cache-redis/docker/grafana/config.ini:/etc/grafana/config.ini
-          - ${{ github.workspace }}/spring-boot-cache-redis/docker/grafana/dashboards:/var/lib/grafana/dashboards
-        options: >-
-          --link prometheus
-          --health-cmd "wget -q -O - http://localhost:3000/api/health"
-          --health-interval 1s
-          --health-timeout 3s
-          --health-retries 30
+#      redis_exporter:
+#        image: oliver006/redis_exporter:v1.37.0-alpine
+#        ports:
+#          - "9121:9121"
+#        options: >-
+#          --link redis
+#          --health-cmd "wget -q -O - http://localhost:9121/health"
+#          --health-interval 1s
+#          --health-timeout 3s
+#          --health-retries 30
+#      prometheus:
+#        image: prom/prometheus:v2.35.0
+#        ports:
+#          - "9090:9090"
+#        volumes:
+#          - ${{ github.workspace }}/spring-boot-cache-redis/docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+#        options: >-
+#          --link redis_exporter
+#          --health-cmd "wget -q -O - http://localhost:9090/-/healthy"
+#          --health-interval 1s
+#          --health-timeout 3s
+#          --health-retries 30
+#      grafana:
+#        image: grafana/grafana:8.5.2
+#        ports:
+#          - "3000:3000"
+#        volumes:
+#          - ${{ github.workspace }}/spring-boot-cache-redis/docker/grafana/provisioning:/etc/grafana/provisioning
+#          - ${{ github.workspace }}/spring-boot-cache-redis/docker/grafana/config.ini:/etc/grafana/config.ini
+#          - ${{ github.workspace }}/spring-boot-cache-redis/docker/grafana/dashboards:/var/lib/grafana/dashboards
+#        options: >-
+#          --link prometheus
+#          --health-cmd "wget -q -O - http://localhost:3000/api/health"
+#          --health-interval 1s
+#          --health-timeout 3s
+#          --health-retries 30
 
     steps:
     - name: Checkout Source Code
