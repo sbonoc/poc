@@ -67,11 +67,5 @@ services:
       interval: 1s
       timeout: 3s
       retries: 30
-  healthchecker:
-    image: alpine:latest
-    depends_on:
-      grafana:
-        condition: service_healthy
-    command: [ "wget", "-q", "-O", "-", "http://localhost:3000/api/health" ]
 
 # host.docker.internal
