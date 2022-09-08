@@ -20,7 +20,7 @@ jobs:
   spring-boot-cache-redis-build:
 
     runs-on: ubuntu-latest
-    container: node:slim
+    #container: node:slim
 
     defaults:
       run:
