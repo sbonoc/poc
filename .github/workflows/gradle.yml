@@ -20,87 +20,50 @@ jobs:
   spring-boot-cache-redis-build:
 
     runs-on: ubuntu-latest
-    container: node:latest
-
+    #container: node:latest
 
     defaults:
       run:
         working-directory: spring-boot-cache-redis
 
-#    services:
-#      redis:
-#        image: redis:7-alpine
-#        ports:
-#          - "6379:6379"
-#        volumes:
-#          - ${{ github.workspace }}/spring-boot-cache-redis/docker/redis/redis-data:/var/lib/redis
-#          - ${{ github.workspace }}/spring-boot-cache-redis/docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
-#        env:
-#          REDIS_REPLICATION_MODE: master
-#        options: >-
-#          --health-cmd "redis-cli ping"
-#          --health-interval 1s
-#          --health-timeout 3s
-#          --health-retries 30
-#      redis_exporter:
-#        image: oliver006/redis_exporter:v1.37.0-alpine
-#        ports:
-#          - "9121:9121"
-#        options: >-
-#          --link redis
-#          --health-cmd "wget -q -O - http://localhost:9121/health"
-#          --health-interval 1s
-#          --health-timeout 3s
-#          --health-retries 30
-#      prometheus:
-#        image: prom/prometheus:v2.35.0
-#        ports:
-#          - "9090:9090"
-#        volumes:
-#          - ${{ github.workspace }}/spring-boot-cache-redis/docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-#        options: >-
-#          --link redis_exporter
-#          --health-cmd "wget -q -O - http://localhost:9090/-/healthy"
-#          --health-interval 1s
-#          --health-timeout 3s
-#          --health-retries 30
-#      grafana:
-#        image: grafana/grafana:8.5.2
-#        ports:
-#          - "3000:3000"
-#        volumes:
-#          - ${{ github.workspace }}/spring-boot-cache-redis/docker/grafana/provisioning:/etc/grafana/provisioning
-#          - ${{ github.workspace }}/spring-boot-cache-redis/docker/grafana/config.ini:/etc/grafana/config.ini
-#          - ${{ github.workspace }}/spring-boot-cache-redis/docker/grafana/dashboards:/var/lib/grafana/dashboards
-#        options: >-
-#          --link prometheus
-#          --health-cmd "wget -q -O - http://localhost:3000/api/health"
-#          --health-interval 1s
-#          --health-timeout 3s
-#          --health-retries 30
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - "6379:6379"
+        volumes:
+          - ${{ github.workspace }}/spring-boot-cache-redis/docker/redis/redis-data:/var/lib/redis
+          - ${{ github.workspace }}/spring-boot-cache-redis/docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+        env:
+          REDIS_REPLICATION_MODE: master
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 1s
+          --health-timeout 3s
+          --health-retries 30
 
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v3
-    - name: Setup Docker Compose (Debian)
-      run: |
-        apt-get update
-        apt-get install --yes ca-certificates curl gnupg lsb-release grep
-        mkdir -p /etc/apt/keyrings
-        curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-        apt-get update
-        apt-get install --yes docker-ce docker-ce-cli containerd.io docker-compose-plugin
-        VERSION=$(curl --silent https://api.github.com/repos/docker/compose/releases/latest | grep -Po '"tag_name": "\K.*\d')
-        DESTINATION=/usr/local/bin/docker-compose
-        curl -L https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) -o $DESTINATION
-        chmod 755 $DESTINATION
-        docker version
-        docker-compose version
-    - name: Start Docker Compose
-      run: |
-        docker compose -f docker/docker-compose.yml up -d
-        docker ps
+#    - name: Setup Docker Compose (Debian)
+#      run: |
+#        apt-get update
+#        apt-get install --yes ca-certificates curl gnupg lsb-release grep
+#        mkdir -p /etc/apt/keyrings
+#        curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+#        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+#        apt-get update
+#        apt-get install --yes docker-ce docker-ce-cli containerd.io docker-compose-plugin
+#        VERSION=$(curl --silent https://api.github.com/repos/docker/compose/releases/latest | grep -Po '"tag_name": "\K.*\d')
+#        DESTINATION=/usr/local/bin/docker-compose
+#        curl -L https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) -o $DESTINATION
+#        chmod 755 $DESTINATION
+#        docker version
+#        docker-compose version
+#    - name: Start Docker Compose
+#      run: |
+#        docker compose -f docker/docker-compose.yml up -d
+#        docker ps
 #        echo "curl -v http://localhost:9121/health"
 #        curl -v http://localhost:9121/health
 #        echo "curl -v http://localhost:9090/-/healthy"
