@@ -83,7 +83,7 @@ jobs:
         REDIS_HOST: redis
         REDIS_PORT: 6379
     - name: Execute Gradle build
-      run: ./gradlew build --full-stacktrace
+      run: ./gradlew build --full-stacktrace --scan
     - name: Stop Docker Compose
       if: ${{ always() }}
       run: docker compose -f docker/docker-compose.yml down
