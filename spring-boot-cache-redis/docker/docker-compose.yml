@@ -10,6 +10,7 @@ services:
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
     environment:
       - REDIS_REPLICATION_MODE=master
+    network_mode: bridge
     healthcheck:
       test: [ "CMD-SHELL", "redis-cli", "ping" ]
       interval: 1s
@@ -26,6 +27,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    network_mode: bridge
     healthcheck:
       test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:9121/health" ]
       interval: 1s
@@ -43,6 +45,7 @@ services:
     depends_on:
       redis_exporter:
         condition: service_healthy
+    network_mode: bridge
     healthcheck:
       test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:9090/-/healthy" ]
       interval: 1s
@@ -62,6 +65,7 @@ services:
     depends_on:
       prometheus:
         condition: service_healthy
+    network_mode: bridge
     healthcheck:
       test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:3000/api/health" ]
       interval: 1s
