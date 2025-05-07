@@ -4,3 +4,4 @@ This repository is basically a collection of proof of concepts or just some hand
 my side.
 
 * [Spring Boot Cache as local cache + Spring Data Redis as central cache](https://github.com/sbonoc/poc/tree/master/spring-boot-cache-redis)
+* [Shift Left Strategy in Test Automation using Vue + Pact + Playwright](https://github.com/sbonoc/poc/tree/master/vue-pact-playwright)
