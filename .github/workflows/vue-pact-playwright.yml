@@ -1,0 +1,130 @@
+name: vue-pact-playwright CI
+
+on:
+  push:
+    paths:
+      - "vue-pact-playwright/**"
+    branches: [ "master" ]
+  pull_request:
+    paths:
+      - "vue-pact-playwright/**"
+    branches: [ "*" ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  working-directory: vue-pact-playwright
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.working-directory }}
+    env:
+      CI: true
+      GITHUB_ACTIONS: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.15
+          cache: 'pnpm'
+          cache-dependency-path: vue-pact-playwright/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint code
+        run: pnpm lint
+      - name: Build app
+        run: pnpm build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.working-directory }}/dist/
+          if-no-files-found: error
+          retention-days: 7      
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    defaults:
+      run:
+        working-directory: ${{ env.working-directory }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.15
+          cache: 'pnpm'
+          cache-dependency-path: vue-pact-playwright/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+      - name: Run Unit Tests
+        run: pnpm test:unit --coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: ${{ env.working-directory }}/coverage/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Run Integration Tests
+        run: pnpm test:integration
+      - name: Run E2E Tests
+        run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: ${{ env.working-directory }}/playwright-report/
+          if-no-files-found: error
+          retention-days: 7
+  publish_allure_report:
+    runs-on: ubuntu-latest
+    needs: test
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+    defaults:
+      run:
+        working-directory: ${{ env.working-directory }}
+    steps:
+      - name: Load test report history
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+      - name: Build test report
+        uses: simple-elf/allure-report-action@v1.12
+        with:
+          gh_pages: gh-pages
+          allure_history: ${{ env.working-directory }}/allure-history
+          allure_report: ${{ env.working-directory }}/allure-report
+          allure_results: ${{ env.working-directory }}/allure-results
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.working-directory }}/allure-history
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

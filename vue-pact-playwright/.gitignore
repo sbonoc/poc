@@ -30,4 +30,6 @@ coverage
 *.tsbuildinfo
 
 test-results/
+allure-results/
+vitest-report/
 playwright-report/
