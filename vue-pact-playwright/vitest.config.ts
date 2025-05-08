@@ -10,7 +10,7 @@ export default mergeConfig(
       exclude: [...configDefaults.exclude, 'e2e/**'],
       root: fileURLToPath(new URL('./', import.meta.url)),
       setupFiles: ['allure-vitest/setup'],
-      reporters: process.env.GITHUB_ACTIONS ? ['default', ['allure-vitest/reporter', { resultsDir: 'allure-results',}], 'github-actions'] : ['default', ['allure-vitest/reporter', { resultsDir: 'allure-results',}]],
+      reporters: ['default', ['allure-vitest/reporter', { resultsDir: 'allure-results' }], ['allure-playwright', { resultsDir: 'allure-results' }]]
     },
   }),
 )

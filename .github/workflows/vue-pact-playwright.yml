@@ -28,9 +28,6 @@ jobs:
     defaults:
       run:
         working-directory: ${{ env.working-directory }}
-    env:
-      CI: true
-      GITHUB_ACTIONS: true
     steps:
       - uses: actions/checkout@v4
       - name: Install pnpm
