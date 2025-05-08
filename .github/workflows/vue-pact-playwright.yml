@@ -23,7 +23,6 @@ env:
   working-directory: vue-pact-playwright
 
 jobs:
-  # Phase 1: Build
   build:
     runs-on: ubuntu-latest
     defaults:
@@ -55,10 +54,8 @@ jobs:
           name: build-artifacts
           path: ${{ env.working-directory }}/dist/
           if-no-files-found: error
-          retention-days: 7
-
-  # Phase 2: Test
-   test:
+          retention-days: 7      
+  test:
     runs-on: ubuntu-latest
     needs: build
     defaults:
@@ -90,8 +87,6 @@ jobs:
           path: ${{ env.working-directory }}/playwright-report/
           if-no-files-found: error
           retention-days: 7
-
-  # Phase 3: Deploy
   publish_allure_report:
     runs-on: ubuntu-latest
     needs: test
