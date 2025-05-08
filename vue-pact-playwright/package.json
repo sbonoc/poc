@@ -47,6 +47,7 @@
     "@vue/eslint-config-typescript": "^14.5.0",
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.7.0",
+    "allure-js-commons": "^3.2.1",
     "allure-playwright": "^3.2.1",
     "allure-vitest": "^3.2.1",
     "eslint": "^9.22.0",
