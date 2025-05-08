@@ -44,7 +44,14 @@ jobs:
     - name: Build app
       run: pnpm build
     - name: Run Unit Tests
-      run: pnpm test:unit
+      run: pnpm test:unit --coverage
+
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: coverage
+        path: coverage/
+        retention-days: 30
     - name: Run Integration Tests
       run: pnpm test:integration
     - name: Install Playwright Browsers
