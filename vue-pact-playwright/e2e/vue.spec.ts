@@ -8,8 +8,8 @@ test('visits the app root url', async ({ page }) => {
   await allure.suite('UI Tests')
   await allure.subSuite('Home Page')
 
-  await allure.step('renders properly', async (ctx) => {
-    debugger;
+  await allure.step('renders properly', async () => {
+
     await allure.description(
       'This test verifies that the Home Page renders Pulse: 1 when Pulse is 1 from the API',
     )

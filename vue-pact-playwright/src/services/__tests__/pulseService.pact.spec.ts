@@ -22,8 +22,6 @@ test('Pulse API', async () => {
       'This test verifies that the Pulse API returns the correct pulse value when Pulse is 1',
     )
     await allure.severity('critical')
-    await allure.feature('Pulse API')
-    await allure.story('Get Pulse when Pulse is 1')
 
     const pulseExample: Pulse = { pulse: 1 }
     const EXPECTED_BODY = MatchersV3.like(pulseExample)
@@ -60,8 +58,6 @@ test('Pulse API', async () => {
       'This test verifies that the Pulse API returns the correct pulse value when Pulse is 2',
     )
     await allure.severity('critical')
-    await allure.feature('Pulse API')
-    await allure.story('Get Pulse when Pulse is 2')
     const pulseExample: Pulse = { pulse: 2 }
     const EXPECTED_BODY = MatchersV3.like(pulseExample)
     const interaction = provider
