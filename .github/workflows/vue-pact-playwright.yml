@@ -20,17 +20,19 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  CI: true
+  GITHUB_ACTIONS: true
   working-directory: vue-pact-playwright
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        job: [build, test]
     defaults:
       run:
         working-directory: ${{ env.working-directory }}
-    env:
-      CI: true
-      GITHUB_ACTIONS: true
     steps:
       - uses: actions/checkout@v4
       - name: Install pnpm
@@ -43,6 +45,9 @@ jobs:
           node-version: 22.15
           cache: 'pnpm'
           cache-dependency-path: vue-pact-playwright/pnpm-lock.yaml
+  build:
+    runs-on: ubuntu-latest
+    steps:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Lint code
@@ -58,9 +63,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: build
-    defaults:
-      run:
-        working-directory: ${{ env.working-directory }}
     steps:
       - uses: actions/checkout@v4
       - name: Download build artifacts
