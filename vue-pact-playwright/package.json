@@ -14,6 +14,7 @@
     "build:docker": "docker compose build",
     "preview": "vite preview",
     "test:unit": "vitest",
+    "test:pact": "vitest pact.spec.ts",
     "test:e2e": "docker compose up -d --build backend; playwright test; docker compose down --rmi all",
     "test:e2e:chromium": "docker compose up -d --build backend; playwright test --project=chromium; docker compose down --rmi all",
     "build-only": "vite build",
