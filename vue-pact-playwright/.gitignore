@@ -30,4 +30,5 @@ coverage
 *.tsbuildinfo
 
 test-results/
+vitest-report/
 playwright-report/
