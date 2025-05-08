@@ -73,6 +73,8 @@ jobs:
           node-version: 22.15
           cache: 'pnpm'
           cache-dependency-path: vue-pact-playwright/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
