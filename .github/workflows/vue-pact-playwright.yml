@@ -90,17 +90,17 @@ jobs:
     - name: Build test report
       uses: simple-elf/allure-report-action@v1.12
       if: always()
+      id: allure-report
       with:
         gh_pages: gh-pages
         allure_history: ${{ env.working-directory }}/allure-history
+        allure_report: ${{ env.working-directory }}/allure-report
         allure_results: ${{ env.working-directory }}/allure-results
-    - name: Setup Pages
-      uses: actions/configure-pages@v5
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        # Upload entire repository
-        path: ${{ env.working-directory }}/allure-history
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+        keep_reports: 30
+    - name: Deploy report to Github Pages
+      if: always()
+      uses: peaceiris/actions-gh-pages@v4
+      env:
+        PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PUBLISH_BRANCH: gh-pages
+        PUBLISH_DIR: ${{ env.working-directory }}/allure-history
