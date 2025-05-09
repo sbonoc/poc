@@ -96,6 +96,13 @@ jobs:
           path: ${{ env.working-directory }}/playwright-report/
           if-no-files-found: error
           retention-days: 3
+  publish-test-report:
+    runs-on: ubuntu-latest
+    needs: build
+    defaults:
+      run:
+        working-directory: ${{ env.working-directory }}
+    steps:
       - name: Load test report history
         uses: actions/checkout@v4
         with:
