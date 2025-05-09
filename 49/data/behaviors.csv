@@ -1,0 +1,5 @@
+"BROKEN","EPIC","FAILED","FEATURE","PASSED","SKIPPED","STORY","UNKNOWN"
+"0","","0","Home Page","3","0","Renders Pulse: 1 when Pulse is 1 from the API","0"
+"0","","0","Home Page","3","0","Renders Pulse: 2 when Pulse is 2 from the API","0"
+"0","","0","","1","0","","0"
+"0","","0","HelloWorld.vue","1","0","Renders Pulse when Pulse property is 1","0"
