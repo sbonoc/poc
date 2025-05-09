@@ -101,6 +101,7 @@ jobs:
     needs: test
     environment:
       name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     defaults:
       run:
         working-directory: ${{ env.working-directory }}
@@ -126,6 +127,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        with:
-          artifact_name: allure-history
-          preview: false
