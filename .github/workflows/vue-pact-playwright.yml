@@ -127,6 +127,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ${{ env.working-directory }}/allure-history
+          destination_dir: ${{ env.working-directory }}/allure-reports
       # - name: Setup Pages
       #   uses: actions/configure-pages@v5
       # - name: Upload artifact
