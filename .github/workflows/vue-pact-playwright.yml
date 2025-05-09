@@ -100,7 +100,7 @@ jobs:
           path: ${{ env.working-directory }}/allure-results/
           if-no-files-found: error
           retention-days: 3
-  publish_allure_report:
+  publish_test_report:
     runs-on: ubuntu-latest
     needs: test
     defaults:
