@@ -116,7 +116,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: allure-results
-      - run: echo "Downloaded artifact 'allure-results' contains"; ls -R allure-results;
+      - run: echo "Check files in working dir' contains"; ls -R .;
       - name: Load test report history
         uses: actions/checkout@v4
         with:
