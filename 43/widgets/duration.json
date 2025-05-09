@@ -1,0 +1,1 @@
+[{"uid":"1e2995f62bfc62f4","name":"Pulse API","time":{"start":1746799890389,"stop":1746799890431,"duration":42},"status":"passed","severity":"critical"},{"uid":"4ef50ce2267bfbe4","name":"HelloWorld","time":{"start":1746799886720,"stop":1746799886747,"duration":27},"status":"passed","severity":"critical"}]

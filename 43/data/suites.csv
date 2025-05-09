@@ -1,0 +1,3 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"This test verifies that the Pulse API returns the correct pulse value when Pulse is 2","42","Pulse API","Integration Tests","Fri May 09 14:11:30 GMT 2025","passed","Fri May 09 14:11:30 GMT 2025","Pulse API","Contract Tests","",""
+"This test verifies that the it shows 1 when Pulse property is 1","27","HelloWorld","Unit Tests","Fri May 09 14:11:26 GMT 2025","passed","Fri May 09 14:11:26 GMT 2025","Helloworld.vue","Component Tests","",""
