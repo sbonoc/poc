@@ -99,6 +99,8 @@ jobs:
   publish-test-report:
     runs-on: ubuntu-latest
     needs: test
+    environment:
+      name: github-pages
     defaults:
       run:
         working-directory: ${{ env.working-directory }}
