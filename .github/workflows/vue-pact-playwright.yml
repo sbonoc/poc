@@ -10,16 +10,12 @@ on:
       - "vue-pact-playwright/**"
     branches: [ "*" ]
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 env:
+  CI: true
   working-directory: vue-pact-playwright
 
 jobs:
@@ -28,9 +24,6 @@ jobs:
     defaults:
       run:
         working-directory: ${{ env.working-directory }}
-    env:
-      CI: true
-      GITHUB_ACTIONS: true
     steps:
       - uses: actions/checkout@v4
       - name: Install pnpm
@@ -52,15 +45,16 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: ${{ env.working-directory }}/dist/
+          path: ${{ env.working-directory }}/dist
           if-no-files-found: error
-          retention-days: 3      
+          retention-days: 3
   test:
     runs-on: ubuntu-latest
     needs: build
     defaults:
       run:
         working-directory: ${{ env.working-directory }}
+
     steps:
       - uses: actions/checkout@v4
       - name: Install pnpm
@@ -79,6 +73,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
+          path: ${{ env.working-directory }}/dist
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run Unit Tests
@@ -99,24 +94,61 @@ jobs:
           path: ${{ env.working-directory }}/playwright-report/
           if-no-files-found: error
           retention-days: 3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: ${{ env.working-directory }}/allure-results/
+          if-no-files-found: error
+          retention-days: 3
+  publish_test_report:
+    if: github.event_name == 'push' && github.ref =='refs/heads/master'
+    runs-on: ubuntu-latest
+    needs: test
+    defaults:
+      run:
+        working-directory: ${{ env.working-directory }}
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.15
+          cache: 'pnpm'
+          cache-dependency-path: vue-pact-playwright/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Download Allure Result from previous step
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results
+          path: ${{ env.working-directory }}/allure-results
       - name: Load test report history
         uses: actions/checkout@v4
+        if: always()
+        continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
       - name: Build test report
         uses: simple-elf/allure-report-action@v1.12
+        if: always()
         with:
           gh_pages: gh-pages
           allure_history: ${{ env.working-directory }}/allure-history
           allure_report: ${{ env.working-directory }}/allure-report
           allure_results: ${{ env.working-directory }}/allure-results
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Publish test report
+        uses: peaceiris/actions-gh-pages@v4
+        if: always()
         with:
-          path: ${{ env.working-directory }}/allure-history
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ${{ env.working-directory }}/allure-history
