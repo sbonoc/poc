@@ -10,11 +10,6 @@ on:
       - "vue-pact-playwright/**"
     branches: [ "*" ]
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -61,6 +56,10 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
