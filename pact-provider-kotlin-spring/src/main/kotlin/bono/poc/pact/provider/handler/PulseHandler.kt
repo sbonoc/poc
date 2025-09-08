@@ -1,6 +1,7 @@
 package bono.poc.pact.provider.handler
 
 import bono.poc.pact.provider.model.Pulse
+import bono.poc.pact.provider.service.PulseService
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -10,29 +11,28 @@ import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
 @Component
-class PulseHandler {
+class PulseHandler(private val pulseService: PulseService) {
 
     fun getPulses(request: ServerRequest): Mono<ServerResponse> {
-        val fromParam = request.queryParam("from").orElse("today")
-
-        val pulseValue = when (fromParam) {
-            "today" -> 1 // Example: return 1 for "today"
-            else -> {
-                try {
-                    // Attempt to parse as a date, if successful, return a different value
-                    LocalDate.parse(fromParam)
-                    2 // Example: return 2 for a valid date
-                } catch (e: DateTimeParseException) {
-                    // If not "today" and not a valid date, return a default or error
-                    return ServerResponse.badRequest()
-                        .bodyValue(mapOf("error" to "Invalid 'from' parameter. Must be 'today' or a valid date (YYYY-MM-DD)."))
-                }
+        val from: LocalDate = when (val fromParam = request.queryParam("from").orElse("today")) {
+            "today" -> LocalDate.now()
+            else -> try {
+                LocalDate.parse(fromParam)
+            } catch (e: DateTimeParseException) {
+                throw IllegalArgumentException("Invalid 'from' parameter. Must be 'today' or a valid date (YYYY-MM-DD).")
             }
         }
 
-        val pulse = Pulse(pulseValue)
-        return ServerResponse.ok()
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(pulse)
+        return pulseService.getPulse(from)
+            .flatMap { pulse ->
+                ServerResponse.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(pulse)
+            }
+            .onErrorResume(IllegalArgumentException::class.java) { e ->
+                ServerResponse.badRequest()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(mapOf("error" to e.message))
+            }
     }
 }
