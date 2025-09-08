@@ -20,15 +20,15 @@ class LoggingWebFilter : WebFilter {
 
         // Log request details
         logger.info("Incoming Request: {} {} from {}", request.method, request.uri, request.remoteAddress)
-        request.headers.forEach { name, values ->
+        request.headers.forEach { (name, values) ->
             logger.debug("  Request Header - {}: {}", name, values.joinToString(","))
         }
 
         return chain.filter(exchange)
-            .doFinally { signalType ->
+            .doFinally { _ ->
                 // Log response details after the chain has completed
                 logger.info("Outgoing Response: {} {} with status {}", request.method, request.uri, response.statusCode)
-                response.headers.forEach { name, values ->
+                response.headers.forEach { (name, values) ->
                     logger.debug("  Response Header - {}: {}", name, values.joinToString(","))
                 }
             }
