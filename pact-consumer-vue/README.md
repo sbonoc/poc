@@ -94,7 +94,7 @@ pnpm create vue@latest
 Adding my project name, choosing `Yes` in all Yes/No prompts and Playwright as the end-to-end testing solution:
 
 ```
-✔ Project name: vue-pact-playwright
+✔ Project name: pact-consumer-vue
 ✔ Add TypeScript? Yes
 ✔ Add JSX Support? Yes
 ✔ Add Vue Router for Single Page Application development? Yes
@@ -105,7 +105,7 @@ Adding my project name, choosing `Yes` in all Yes/No prompts and Playwright as t
 ✔ Add Prettier for code formatting? Yes
 ✔ Add Vue DevTools 7 extension for debugging? (experimental) Yes
 
-Scaffolding project in ./vue-pact-playwright...
+Scaffolding project in ./pact-consumer-vue...
 Done.
 ```
 
