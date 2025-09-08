@@ -23,13 +23,13 @@ test('Pulse API', async () => {
     )
     await allure.severity('critical')
 
-    const pulseExample: Pulse = { pulse: 1 }
+    const pulseExample: Pulse = { value: 1 }
     const EXPECTED_BODY = MatchersV3.like(pulseExample)
     const interaction = provider
       .addInteraction()
       .given('Pulse is 1')
       .uponReceiving('a request for Pulse')
-      .withRequest('GET', '/api/pulse', (builder) => {
+      .withRequest('GET', '/api/pulses', (builder) => {
         builder.query({ from: 'today' }).headers({ Accept: 'application/json' })
       })
       .willRespondWith(200, (builder) => {
@@ -58,13 +58,13 @@ test('Pulse API', async () => {
       'This test verifies that the Pulse API returns the correct pulse value when Pulse is 2',
     )
     await allure.severity('critical')
-    const pulseExample: Pulse = { pulse: 2 }
+    const pulseExample: Pulse = { value: 2 }
     const EXPECTED_BODY = MatchersV3.like(pulseExample)
     const interaction = provider
       .addInteraction()
       .given('Pulse is 2')
       .uponReceiving('a request for Pulse')
-      .withRequest('GET', '/api/pulse', (builder) => {
+      .withRequest('GET', '/api/pulses', (builder) => {
         builder.query({ from: 'today' }).headers({ Accept: 'application/json' })
       })
       .willRespondWith(200, (builder) => {

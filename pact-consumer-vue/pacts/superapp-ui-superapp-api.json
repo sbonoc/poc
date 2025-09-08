@@ -18,7 +18,7 @@
           ]
         },
         "method": "GET",
-        "path": "/api/pulse",
+        "path": "/api/pulses",
         "query": {
           "from": [
             "today"
@@ -28,7 +28,7 @@
       "response": {
         "body": {
           "content": {
-            "pulse": 1
+            "value": 1
           },
           "contentType": "application/json",
           "encoded": false
@@ -71,7 +71,7 @@
           ]
         },
         "method": "GET",
-        "path": "/api/pulse",
+        "path": "/api/pulses",
         "query": {
           "from": [
             "today"
@@ -81,60 +81,7 @@
       "response": {
         "body": {
           "content": {
-            "pulse": 2
-          },
-          "contentType": "application/json",
-          "encoded": false
-        },
-        "headers": {
-          "Content-Type": [
-            "application/json"
-          ]
-        },
-        "matchingRules": {
-          "body": {
-            "$": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
-            }
-          },
-          "header": {},
-          "status": {}
-        },
-        "status": 200
-      },
-      "type": "Synchronous/HTTP"
-    },
-    {
-      "description": "a request for all stats",
-      "pending": false,
-      "providerStates": [
-        {
-          "name": "I have data in all stats"
-        }
-      ],
-      "request": {
-        "headers": {
-          "Accept": [
-            "application/json"
-          ]
-        },
-        "method": "GET",
-        "path": "/api/pulse",
-        "query": {
-          "from": [
-            "today"
-          ]
-        }
-      },
-      "response": {
-        "body": {
-          "content": {
-            "pulse": 1
+            "value": 2
           },
           "contentType": "application/json",
           "encoded": false

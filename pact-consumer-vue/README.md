@@ -14,6 +14,7 @@ Table of contents:
     - [Step 6 - Add Pulse in HelloWorld component](#step-6---add-pulse-in-helloworld-component)
     - [Step 7 - Create Dockerfile and Docker Compose](#step-7---create-dockerfile-and-docker-compose)
     - [Step 8 - Create Playwright test using Pact stub server](#step-8---create-playwright-test-using-pact-stub-server)
+    - [Step 9 - Create Provider API in another project](#step-9---create-provider-api-in-another-project)
 
 ## Why this PoC?
 
@@ -138,7 +139,7 @@ const provider = new PactV4({
   spec: SpecificationVersion.SPECIFICATION_VERSION_V4,
 })
 
-const pulseExample = { pulse: 1 }
+const pulseExample = { value: 1 }
 const EXPECTED_BODY = MatchersV3.like(pulseExample)
 
 test('gets pulse', async () => {
@@ -146,7 +147,7 @@ test('gets pulse', async () => {
     .addInteraction()
     .given('I have data in all stats')
     .uponReceiving('a request for all stats')
-    .withRequest('GET', '/pulse', (builder) => {
+    .withRequest('GET', '/api/pulses', (builder) => {
       builder.query({ from: 'today' }).headers({ Accept: 'application/json' })
     })
     .willRespondWith(200, (builder) => {
@@ -167,7 +168,7 @@ test('gets pulse', async () => {
       params: { from: 'today' },
       headers: { Accept: 'application/json' },
       method: 'GET',
-      url: '/pulse',
+      url: '/api/pulses',
     })
 
     expect(response).toBeDefined()
@@ -250,4 +251,6 @@ test('visits the app root url given pulse is 2', async ({ page }) => {
 
 ```
 
+### Step 9 - Create Provider API in another project
 
+Once the Consumer part was done, I started the Provider's part, the actual API to be consumed, in a separate project, [click on this link to continue the story](https://github.com/sbonoc/poc/tree/master/pact-provider-ktor).

@@ -14,7 +14,7 @@ export const getPulse = async (baseUrl: string, from: string): Promise<Pulse> =>
     params: { from },
     headers: { Accept: 'application/json' },
     method: 'GET',
-    url: '/api/pulse',
+    url: '/api/pulses',
   })
 
   if (response.status !== 200) {

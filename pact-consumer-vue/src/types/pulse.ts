@@ -1,3 +1,3 @@
 export interface Pulse {
-  pulse: number
+  value: number
 }

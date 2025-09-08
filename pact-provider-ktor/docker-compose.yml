@@ -1,0 +1,16 @@
+services:
+  backend:
+    image: backend
+    build:
+      context: .
+      target: backend
+      tags:
+        - backend:latest
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - back-tier
+
+networks:
+  back-tier: {}
