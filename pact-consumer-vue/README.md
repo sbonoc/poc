@@ -4,7 +4,7 @@ Table of contents:
 - [Why Pact? Beyond Traditional Integration Tests](#why-pact-beyond-traditional-integration-tests)
 - [Project Setup](#project-setup)
     - [Compile and Hot-Reload for Development](#compile-and-hot-reload-for-development)
-    - [Run Unit Tests with Vitest](#run-unit-tests-with-vitest)
+    - [Run Unit Tests with Vitest](#run-unit-and-contract-pact-tests-with-vitest)
     - [Run End-to-End Tests with Playwright](#run-end-to-end-tests-with-playwright)
 - [What I've done step-by-step](#what-ive-done-step-by-step)
     - [Step 1 - Create Vue app using Vue CLI](#step-1---create-vue-app-using-vue-cli)
