@@ -29,7 +29,7 @@ COPY src src/
 # Build the application
 # Use --no-daemon for CI/CD environments to avoid lingering processes
 # Use -x test to skip tests during build if not needed for the image
-RUN ./gradlew installDist --no-daemon
+RUN ./gradlew build installDist --no-daemon
 
 # Stage 2: Create the final image
 FROM eclipse-temurin:21-jre-alpine AS backend
