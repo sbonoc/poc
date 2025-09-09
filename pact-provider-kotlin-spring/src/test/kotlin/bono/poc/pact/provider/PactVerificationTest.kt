@@ -34,7 +34,7 @@ import java.util.*
  * In a real-world scenario, you might use `@PactBroker` to fetch pacts from a Pact Broker.
  */
 @Provider("superapp-api") // The name of your provider as defined in the consumer pact
-@PactFolder("../pact-consumer-vue/pacts") // Directory where consumer pact JSON files are stored (e.g., src/test/resources/pacts)
+@PactFolder("pacts") // Directory where consumer pact JSON files are stored (e.g., src/test/resources/pacts)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ExtendWith(PactVerificationInvocationContextProvider::class)
 class PactVerificationTest {
