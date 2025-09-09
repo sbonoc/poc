@@ -44,11 +44,11 @@ class PulseHandler(private val pulseService: PulseService) {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(mapOf("error" to e.message))
             }
-            .onErrorResume(Throwable::class.java) { e ->
+            .onErrorResume(Exception::class.java) { e ->
                 // This catches any other exceptions (e.g., from pulseService)
                 ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(mapOf("error" to (e.message ?: "An unexpected error occurred")))
+                    .bodyValue(mapOf("error" to ("Internal Server Error: ${e.message}")))
             }
     }
 }
