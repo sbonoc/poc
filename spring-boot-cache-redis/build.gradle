@@ -1,16 +1,17 @@
 plugins {
-    id 'com.avast.gradle.docker-compose' version '0.16.3'
-    id 'io.gatling.gradle' version '3.7.6.2'
-    id 'org.springframework.boot' version '2.6.7'
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-    id "io.freefair.lombok" version "6.4.3"
     id 'java'
     id 'scala'
+    id 'org.springframework.boot' version '2.6.7'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id "io.freefair.lombok" version "8.14.2"
+    id 'io.gatling.gradle' version '3.14.3.7'
+    id 'com.avast.gradle.docker-compose' version '0.17.12'
 }
 
 group = 'bono.poc'
 version = '1.0.0'
 sourceCompatibility = '18'
+targetCompatibility = '18'
 
 repositories {
     mavenLocal()
@@ -40,6 +41,16 @@ dependencies {
     implementation 'org.springframework.geode:spring-geode-starter:1.6.7'
     implementation 'org.springframework.geode:spring-geode-starter-actuator:1.6.7'
 
+    // Explicitly add Netty dependencies to resolve potential ClassNotFoundException during Gatling run.
+    // This ensures the correct Netty modules and versions are available,
+    // especially when multiple libraries (Redisson, Gatling) depend on Netty.
+    // Using the version aligned with Spring Boot 2.6.7's BOM.
+    implementation 'io.netty:netty-buffer:4.1.76.Final'
+    implementation 'io.netty:netty-common:4.1.76.Final'
+    implementation 'io.netty:netty-transport:4.1.76.Final'
+    implementation 'io.netty:netty-handler:4.1.76.Final'
+    implementation 'io.netty:netty-codec:4.1.76.Final'
+    implementation 'io.netty:netty-resolver:4.1.76.Final'
 }
 
 test {
@@ -62,7 +73,6 @@ dockerCompose {
 gatling {
     includeMainOutput = false
     includeTestOutput = true
-    logHttp = 'FAILURES'
 }
 
 // See https://gatling.io/docs/gatling/reference/current/extensions/gradle_plugin/#default-tasks

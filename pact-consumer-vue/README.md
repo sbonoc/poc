@@ -1,10 +1,10 @@
 # Vue 3 + Pact + Playwright: Accelerating Test Automation
 
 Table of contents:
-- [Why this PoC?](#why-this-poc)
+- [Why Pact? Beyond Traditional Integration Tests](#why-pact-beyond-traditional-integration-tests)
 - [Project Setup](#project-setup)
     - [Compile and Hot-Reload for Development](#compile-and-hot-reload-for-development)
-    - [Run Unit Tests with Vitest](#run-unit-tests-with-vitest)
+    - [Run Unit Tests with Vitest](#run-unit-and-contract-pact-tests-with-vitest)
     - [Run End-to-End Tests with Playwright](#run-end-to-end-tests-with-playwright)
 - [What I've done step-by-step](#what-ive-done-step-by-step)
     - [Step 1 - Create Vue app using Vue CLI](#step-1---create-vue-app-using-vue-cli)
@@ -16,26 +16,22 @@ Table of contents:
     - [Step 8 - Create Playwright test using Pact stub server](#step-8---create-playwright-test-using-pact-stub-server)
     - [Step 9 - Create Provider API in another project](#step-9---create-provider-api-in-another-project)
 
-## Why this PoC?
+# Why Pact? Beyond Traditional Integration Tests
 
-Web application test automation often becomes unreliable and complex when dependent on real runtime environments.
+Still relying on traditional integration tests? Here's why Pact offers a superior approach for microservices:
 
-Key challenges:
-* Requires a full runtime environment for testing.
-* This environment must always have accurate, consistent data for all test scenarios.
+**Traditional Integration Tests (Provider-Side):**
+*   **Blind Spots**: Pass internal tests, but still break *actual* consumers in production. Integration issues found late, leading to costly fixes.
+*   **Brittle & Slow**: Complex setup, tightly coupled, and often slow, making them hard to maintain and run frequently.
 
-A better approach is to follow the Test Pyramid principle:
-* Plenty of Unit Tests – Easy to implement when applying SOLID principles.
-* Fewer Integration Tests – Includes contract testing and UI testing with mocked data.
-* Minimal E2E Tests – Only for business-critical paths that truly need real environments.
+**Pact Contract Tests (Consumer-Driven):**
+*   **Guaranteed Compatibility**: Consumers define their exact needs. Providers verify they meet these *real-world* expectations, ensuring true compatibility.
+*   **Shift Left**: Catch integration bugs in CI/CD, not production. Faster feedback loops mean quicker fixes and less debugging.
+*   **Independent Deployments**: Confidently deploy services knowing they won't break consumers, enabling true microservice autonomy.
+*   **Clear Contracts**: Pact files are living, executable documentation of API agreements, fostering better team communication.
+*   **Fast & Reliable**: Tests run in isolation with mocked dependencies, making them quick, stable, and easy to maintain.
 
-This PoC explores how to achieve that using:
-* Pact to test API contracts between a Vue frontend and its backend.
-* Playwright to test the UI using Pact's mock server.
-
-Goals:
-* Eliminate the need for real APIs and data during testing.
-* Significantly reduce total test execution time, adhering to the Test Pyramid.
+**In short: Pact ensures your API works *for your consumers*, not just in isolation. It's about confidence, speed, and seamless microservice integration.**
 
 ## Project Setup
 

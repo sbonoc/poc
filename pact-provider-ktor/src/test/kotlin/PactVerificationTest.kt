@@ -29,7 +29,7 @@ import java.util.*
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Provider("superapp-api") // Defines the name of the provider for Pact verification
-@PactFolder("../pact-consumer-vue/pacts/") // Specifies the directory where pact files are located OR use Pact Broker to discover and load pacts.
+@PactFolder("pacts") // Specifies the directory where pact files are located OR use Pact Broker to discover and load pacts.
 @ExtendWith(PactVerificationInvocationContextProvider::class) // Enables Pact verification context injection
 class PactVerificationTest {
 

@@ -12,3 +12,6 @@ Feel free to explore the individual project directories for more detailed inform
 
 *   **Ktor Backend with Pact (Provider-side) (`pact-provider-ktor`)**: This project showcases a Ktor-based backend service, illustrating the implementation of Pact for provider-side contract testing.
     *   [Explore Project](https://github.com/sbonoc/poc/tree/master/pact-provider-ktor)
+
+*   **Kotlin & Spring Boot Backend with Pact (Provider-side) (`pact-provider-kotlin-spring`)**: This project showcases a Spring Boot and Kotlin-based backend service, illustrating the implementation of Pact for provider-side contract testing.
+    *   [Explore Project](https://github.com/sbonoc/poc/tree/master/pact-provider-kotlin-spring)

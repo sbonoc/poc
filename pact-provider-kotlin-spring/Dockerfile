@@ -29,7 +29,7 @@ COPY src src/
 # Build the application
 # Use --no-daemon for CI/CD environments to avoid lingering processes
 # Use -x test to skip tests during build if not needed for the image
-RUN ./gradlew build installDist --no-daemon
+RUN ./gradlew build --no-daemon
 
 # Stage 2: Create the final image
 FROM eclipse-temurin:21-jre-alpine AS backend
@@ -41,13 +41,13 @@ USER appuser
 WORKDIR /app
 
 # Copy the built application from the builder stage
-# The 'installDist' task places the runnable distribution in build/install/<project-name>
+# The 'build' task places the runnable distribution in build/install/<project-name>
 # Ensure the copied files are owned by the non-root user
-COPY --from=builder --chown=appuser:appgroup /app/build/install/pact-provider-ktor ./
+COPY --from=builder --chown=appuser:appgroup /app/build/install/pact-provider-kotlin-spring ./
 
-# Expose the port Ktor runs on (default is 8080)
+# Expose the port Spring runs on (default is 8080)
 EXPOSE 8080
 
 # Run the application
-# The 'installDist' task creates a shell script in the 'bin' directory
-CMD ["./bin/pact-provider-ktor"]
+# The 'build' task creates a shell script in the 'bin' directory
+CMD ["./bin/pact-provider-kotlin-spring"]
