@@ -70,5 +70,9 @@ func (h *PulseHandler) GetPulse(w http.ResponseWriter, r *http.Request) {
 func sendErrorResponse(w http.ResponseWriter, message string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(map[string]string{"error": message})
+	err := json.NewEncoder(w).Encode(map[string]string{"error": message})
+	if err != nil {
+		log.Fatalf("Error encoding error response: %v", err)
+		return
+	}
 }
