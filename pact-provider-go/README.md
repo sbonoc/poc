@@ -1,8 +1,19 @@
 # Pact Provider for Go
 
-ADD_DESCRIPTION
+This project showcases a Go and Gin-based backend service, illustrating the implementation of Pact for provider-side contract testing.
 
-ADD_TABLE_OF_CONTENTS
+## Table of Contents
+* [Why Pact? Beyond Traditional Integration Tests](#why-pact-beyond-traditional-integration-tests)
+* [Features](#features)
+* [Building & Running](#building--running)
+  * [Pre-requisites](#pre-requisites)
+* [Step-by-Step Setup and Development](#step-by-step-setup-and-development)
+  * [Step 1: Create the Go project](#step-1-create-the-go-project)
+  * [Step 2: Create the actual application using Gin](#step-2-create-the-actual-application-using-gin)
+  * [Step 3: Add Go Test to check application works as expected](#step-3-add-go-test-to-check-application-works-as-expected)
+  * [Step 4: Add the Pact Provider verification tests for contract testing](#step-4-add-the-pact-provider-verification-tests-for-contract-testing)
+* [Reference Documentation](#reference-documentation)
+* [Guides](#guides)
 
 ## Why Pact? Beyond Traditional Integration Tests
 
