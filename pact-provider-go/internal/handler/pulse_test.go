@@ -12,6 +12,7 @@ import (
 
 	"bono.poc/pact-provider-go/internal/handler" // Import the handler package
 	"bono.poc/pact-provider-go/internal/model"
+	"github.com/gin-gonic/gin" // Import Gin
 )
 
 // MockPulseService implements service.PulseService for testing.
@@ -139,23 +140,29 @@ func TestGetPulseHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create a new handler with the mock service and mock time provider
-			h := handler.NewPulseHandler(tt.mockService)
+			// Set Gin to Test Mode
+			gin.SetMode(gin.TestMode)
 
-			req, err := http.NewRequest("GET", "/api/pulses", nil)
+			// Create a new handler with the mock service
+			pulseHandler := handler.NewPulseHandler(tt.mockService)
+
+			// Create a new Gin engine and register the route
+			router := gin.New() // Use gin.New() for minimal middleware in tests
+			router.GET("/api/pulses", pulseHandler.GetPulse)
+
+			// Construct the request URL
+			url := "/api/pulses"
+			if tt.fromParam != "" {
+				url = fmt.Sprintf("%s?from=%s", url, tt.fromParam)
+			}
+
+			req, err := http.NewRequest("GET", url, nil)
 			if err != nil {
 				t.Fatalf("could not create request: %v", err)
 			}
 
-			q := req.URL.Query()
-			if tt.fromParam != "" {
-				q.Add("from", tt.fromParam)
-			}
-			req.URL.RawQuery = q.Encode()
-
 			rr := httptest.NewRecorder()
-
-			h.GetPulse(rr, req)
+			router.ServeHTTP(rr, req) // Serve the HTTP request using the Gin router
 
 			if rr.Code != tt.expectedStatus {
 				t.Errorf("expected status %d; got %d", tt.expectedStatus, rr.Code)
