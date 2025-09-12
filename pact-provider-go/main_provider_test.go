@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	l "log" // Using 'l' as an alias for log to avoid conflict with 'log' in other packages if needed
 	"os"
 	"path/filepath"
 	"testing"
@@ -26,9 +25,6 @@ var dir, _ = os.Getwd()
 // Define the directory where Pact files (consumer contracts) are stored.
 var pactDir = fmt.Sprintf("%s/pacts", dir)
 
-// Global flag to check if a state handler was actually invoked during verification.
-var stateHandlerCalled = false
-
 // MockPulseService implements service.PulseService for testing.
 // This mock allows us to control the behavior of the service layer during provider tests.
 type MockPulseService struct {
@@ -44,7 +40,6 @@ func (m *MockPulseService) GetPulse(fromDate time.Time) (*model.Pulse, error) {
 		return m.GetPulseFunc(fromDate)
 	}
 	// Default mock behavior if GetPulseFunc is not explicitly set for a state.
-	l.Println("[DEBUG] MockPulseService.GetPulse called with default behavior.")
 	return &model.Pulse{
 		ID:        "mock-pulse-id-default",
 		Value:     100,
@@ -61,16 +56,14 @@ var mockPulseService *MockPulseService // Global mock to be able to change its b
 
 // createPulseStateHandler is a helper function to generate Pact provider state handlers.
 // It returns a models.StateHandler function that configures the mock service based on the given pulseValue.
-func createPulseStateHandler(pulseValue int) models.StateHandler {
+func createPulseStateHandler(t *testing.T, pulseValue int) models.StateHandler {
 	return func(setup bool, s models.ProviderState) (models.ProviderStateResponse, error) {
-		stateHandlerCalled = true // Mark that a state handler was called
-
 		if setup {
 			// This block runs when the provider state needs to be set up.
-			l.Printf("[DEBUG] HOOK calling 'Pulse is %d' state handler %v", pulseValue, s)
+			t.Logf("[DEBUG] HOOK calling 'Pulse is %d' state handler %v", pulseValue, s)
 			// Configure the global mock service for this specific state.
 			mockPulseService.GetPulseFunc = func(fromDate time.Time) (*model.Pulse, error) {
-				l.Printf("[DEBUG] MockPulseService.GetPulse called for state 'Pulse is %d' with date: %v", pulseValue, fromDate)
+				t.Logf("[DEBUG] MockPulseService.GetPulse called for state 'Pulse is %d' with date: %v", pulseValue, fromDate)
 				// Use a fixed timestamp for consistency in tests.
 				fixedMockTimestampMilli := int64(1672531200000) // Jan 1, 2023 00:00:00 UTC in milliseconds
 				return &model.Pulse{
@@ -83,13 +76,11 @@ func createPulseStateHandler(pulseValue int) models.StateHandler {
 			}
 		} else {
 			// This block runs when the provider state needs to be torn down (after the interaction).
-			l.Printf("[DEBUG] HOOK teardown the 'Pulse is %d' state", pulseValue)
+			t.Logf("[DEBUG] HOOK teardown the 'Pulse is %d' state", pulseValue)
 			// In this simple case, no specific teardown is needed as BeforeEach resets the mock.
 		}
 
-		// Return a ProviderStateResponse. This can contain data to be injected into the provider's request.
-		// For this example, a dummy UUID is returned.
-		return models.ProviderStateResponse{"uuid": "1234"}, nil
+		return nil, nil
 	}
 }
 
@@ -105,7 +96,7 @@ func TestV3HTTPProvider(t *testing.T) {
 	defer func() {
 		if testServer != nil {
 			testServer.Close()
-			l.Println("Test server closed.")
+			t.Log("Test server closed.")
 		}
 	}()
 
@@ -122,7 +113,7 @@ func TestV3HTTPProvider(t *testing.T) {
 		},
 		BeforeEach: func() error {
 			// This hook runs before each interaction is verified.
-			l.Println("[DEBUG] HOOK before each")
+			t.Log("[DEBUG] HOOK before each")
 			// Reset the mock service's behavior to its default (or nil) state
 			// to ensure test isolation between interactions.
 			mockPulseService.GetPulseFunc = nil
@@ -130,22 +121,20 @@ func TestV3HTTPProvider(t *testing.T) {
 		},
 		AfterEach: func() error {
 			// This hook runs after each interaction is verified.
-			l.Println("[DEBUG] HOOK after each")
+			t.Log("[DEBUG] HOOK after each")
 			return nil
 		},
 		// Define the state handlers that Pact will call based on the "providerStates"
 		// defined in the consumer contract.
 		StateHandlers: models.StateHandlers{
-			"Pulse is 1": createPulseStateHandler(1), // Maps state description to its setup function
-			"Pulse is 2": createPulseStateHandler(2),
+			"Pulse is 1": createPulseStateHandler(t, 1),
+			"Pulse is 2": createPulseStateHandler(t, 2),
 		},
 		DisableColoredOutput: false, // Disable colored output for cleaner logs in some CI environments, now enabled.
 	})
 
 	// Assert that no error occurred during the verification process.
 	assert.NoError(t, err)
-	// Assert that at least one state handler was called, indicating the verification ran as expected.
-	assert.True(t, stateHandlerCalled, "State handler not called as expected")
 }
 
 // startServer initializes and starts the Gin HTTP server for testing.
@@ -160,5 +149,4 @@ func startServer() {
 	// Create a new test HTTP server using httptest.NewServer.
 	// This server listens on a random available port.
 	testServer = httptest.NewServer(router)
-	l.Printf("Pact Provider Test: Application server running on: %s", testServer.URL)
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -127,8 +126,7 @@ func TestGetPulseHandler(t *testing.T) {
 				GetPulseFunc: func(t time.Time) (*model.Pulse, error) {
 					// This mock function should ideally not be called if the handler correctly
 					// validates the 'from' parameter before calling the service.
-					log.Fatal("Service should not be called for invalid date format") // Fail if service is called
-					return nil, nil
+					return nil, errors.New("service should not be called for invalid date format")
 				},
 			},
 			expectedStatus: http.StatusBadRequest,
