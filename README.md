@@ -4,14 +4,17 @@ This repository serves as a personal collection of Proof of Concepts (PoCs) and 
 
 Feel free to explore the individual project directories for more detailed information and setup instructions.
 
-*   **Spring Boot Cache with Redis (`spring-boot-cache-redis`)**: Demonstrates a caching strategy using Spring Boot's local cache combined with Spring Data Redis as a central cache. This project showcases how to implement efficient data retrieval and consistency across multiple application instances.
+*   **Spring Boot Cache with Redis (`spring-boot-cache-redis`)**: Demonstrates a caching strategy using Spring Boot's local cache and Spring Data Redis for efficient data retrieval.
     *   [Explore Project](https://github.com/sbonoc/poc/tree/master/spring-boot-cache-redis)
 
-*   **Vue Frontend with Pact (Consumer-side) & Playwright (`pact-consumer-vue`)**: This project focuses on the Vue.js frontend application, demonstrating Consumer-Driven Contracts (CDC) with Pact for consumer-side testing. It also includes Playwright for end-to-end tests and utilizes Pact Stub Server for local development mocking.
+*   **Vue Frontend with Pact (Consumer-side) & Playwright (`pact-consumer-vue`)**: A Vue.js frontend application showcasing Consumer-Driven Contracts (CDC) with Pact, Playwright for E2E tests, and Pact Stub Server for mocking.
     *   [Explore Project](https://github.com/sbonoc/poc/tree/master/pact-consumer-vue)
 
-*   **Ktor Backend with Pact (Provider-side) (`pact-provider-ktor`)**: This project showcases a Ktor-based backend service, illustrating the implementation of Pact for provider-side contract testing.
+*   **Ktor Backend with Pact (Provider-side) (`pact-provider-ktor`)**: A Ktor-based backend service demonstrating Pact for provider-side contract testing.
     *   [Explore Project](https://github.com/sbonoc/poc/tree/master/pact-provider-ktor)
 
-*   **Kotlin & Spring Boot Backend with Pact (Provider-side) (`pact-provider-kotlin-spring`)**: This project showcases a Spring Boot and Kotlin-based backend service, illustrating the implementation of Pact for provider-side contract testing.
+*   **Kotlin & Spring Boot Backend with Pact (Provider-side) (`pact-provider-kotlin-spring`)**: A Spring Boot and Kotlin backend service illustrating Pact for provider-side contract testing.
     *   [Explore Project](https://github.com/sbonoc/poc/tree/master/pact-provider-kotlin-spring)
+
+*   **Go & Gin Backend with Pact (Provider-side) (`pact-provider-go`)**: A Go and Gin-based backend service implementing Pact for provider-side contract testing.
+    *   [Explore Project](https://github.com/sbonoc/poc/tree/master/pact-provider-go)
