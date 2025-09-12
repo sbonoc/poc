@@ -50,8 +50,5 @@ func main() {
 	if err := router.Run(port); err != nil {
 		// Log a fatal error if the server fails to start.
 		log.Fatalf("Server failed to start: %v", err)
-	} else {
-		// Log a message indicating successful server startup.
-		log.Printf("Server started on port %s", port)
 	}
 }
