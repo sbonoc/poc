@@ -21,6 +21,6 @@ metadata:
   name: provider-gcp-pubsub
 spec:
   package: xpkg.upbound.io/upbound/provider-gcp-pubsub:v1.2.0
-  # FIX: Modern Crossplane uses runtimeConfigRef
+  # Use runtimeConfigRef to attach the gcp-emulator-config DeploymentRuntimeConfig for this provider
   runtimeConfigRef:
     name: gcp-emulator-config
