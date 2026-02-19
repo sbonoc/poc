@@ -1,0 +1,26 @@
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: gcp-emulator-config
+spec:
+  deploymentTemplate:
+    spec:
+      selector: {}
+      template:
+        spec:
+          containers:
+            # 'package-runtime' is the standard container name for all Crossplane providers
+            - name: package-runtime
+              env:
+                - name: PUBSUB_EMULATOR_HOST
+                  value: "gcp-emulator.default.svc.cluster.local:8085"
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-gcp-pubsub
+spec:
+  package: xpkg.upbound.io/upbound/provider-gcp-pubsub:v1.2.0
+  # Use runtimeConfigRef to attach the gcp-emulator-config DeploymentRuntimeConfig for this provider
+  runtimeConfigRef:
+    name: gcp-emulator-config

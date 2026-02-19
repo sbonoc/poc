@@ -1,0 +1,7 @@
+apiVersion: agnostic.systems/v1alpha1
+kind: PubSubTopic
+metadata:
+  name: orders-bus
+  namespace: default
+spec:
+  topicName: orders

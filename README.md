@@ -4,8 +4,17 @@ This repository serves as a personal collection of Proof of Concepts (PoCs) and 
 
 Feel free to explore the individual project directories for more detailed information and setup instructions.
 
+## Infrastructure
+
+*   **Crossplane and Dapr (`crossplane-dapr`)**: Developing a **cloud-agnostic** event-driven application architecture using Crossplane and Dapr.
+    * [Explore Project](https://github.com/sbonoc/poc/tree/master/crossplane-dapr)
+
+## Spring Boot
+
 *   **Spring Boot Cache with Redis (`spring-boot-cache-redis`)**: Demonstrates a caching strategy using Spring Boot's local cache and Spring Data Redis for efficient data retrieval.
     *   [Explore Project](https://github.com/sbonoc/poc/tree/master/spring-boot-cache-redis)
+
+## Test Automation
 
 *   **Vue Frontend with Pact (Consumer-side) & Playwright (`pact-consumer-vue`)**: A Vue.js frontend application showcasing Consumer-Driven Contracts (CDC) with Pact, Playwright for E2E tests, and Pact Stub Server for mocking.
     *   [Explore Project](https://github.com/sbonoc/poc/tree/master/pact-consumer-vue)

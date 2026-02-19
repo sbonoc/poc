@@ -1,0 +1,2 @@
+resources:
+  - dapr-pubsub.yaml

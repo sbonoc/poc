@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumer
+  template:
+    metadata:
+      labels:
+        app: consumer
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "consumer"
+        dapr.io/app-port: "8080"
+    spec:
+      containers:
+      - name: consumer
+        # FIX: Match the exact tag created by your deploy.sh
+        image: ttl.sh/agnostic-consumer-user99:2h
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080

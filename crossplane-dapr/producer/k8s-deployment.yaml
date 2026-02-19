@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: producer
+  template:
+    metadata:
+      labels:
+        app: producer
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "producer"
+        dapr.io/app-port: "8080"
+    spec:
+      containers:
+      - name: producer
+        image: ttl.sh/agnostic-producer-user99:2h
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
