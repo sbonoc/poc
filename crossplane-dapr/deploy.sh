@@ -11,8 +11,8 @@ kubectl delete -f producer/k8s-deployment.yaml --ignore-not-found=true || true
 kubectl delete -f consumer/k8s-deployment.yaml --ignore-not-found=true || true
 
 echo "Removing infrastructure claims and emulator..."
-kubectl delete -k infra/overlays/local/phase-2-logic  -ignore-not-found=true || true
-kubectl delete -k infra/overlays/local/phase-1-plumbing/ -ignore-not-found=true || true
+kubectl delete -k infra/overlays/local/phase-2-logic  --ignore-not-found=true || true
+kubectl delete -k infra/overlays/local/phase-1-plumbing/ --ignore-not-found=true || true
 
 echo "Cleaning up Crossplane XRD (this may take a moment)..."
 kubectl delete -k infra/base/runtime/ --ignore-not-found=true || true
