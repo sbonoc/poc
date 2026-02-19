@@ -81,7 +81,7 @@ kind: Function
 metadata:
   name: function-patch-and-transform
 spec:
-  package: xpkg.upbound.io/crossplane-contrib/function-patch-and-transform:v0.5.0
+  package: xpkg.upbound.io/crossplane-contrib/function-patch-and-transform:v0.7.0
 EOF
 
 # --- 3. INFRASTRUCTURE CONTRACT (XRD) ---
