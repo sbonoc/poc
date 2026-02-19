@@ -1,0 +1,8 @@
+**/.gradle
+**/build
+**/.kotlin
+**/bin
+**/.idea
+.git
+.gitignore
+README.md

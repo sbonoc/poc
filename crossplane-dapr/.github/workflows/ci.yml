@@ -1,0 +1,66 @@
+name: crossplane-dapr-ci
+
+on:
+  push:
+    paths:
+      - '**'
+  pull_request:
+    paths:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  shift-left:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Make Gradle executable
+        run: chmod +x gradlew
+
+      - name: Unit tests
+        run: ./gradlew unitTest
+
+      - name: Static quality gates
+        run: ./gradlew ktlintCheck detekt
+
+      - name: Integration tests
+        run: ./gradlew integrationTest
+
+      - name: Contract tests
+        run: ./gradlew contractTest
+
+      - name: Coverage gate
+        run: ./gradlew koverVerify
+
+  e2e-smoke:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Make Gradle executable
+        run: chmod +x gradlew
+
+      - name: E2E smoke (opt-in)
+        env:
+          RUN_E2E: "true"
+        run: ./gradlew e2eTest
