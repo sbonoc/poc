@@ -1,0 +1,8 @@
+apiVersion: gcp.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: local-emulator-config
+spec:
+  projectID: local-project
+  credentials:
+    source: None
