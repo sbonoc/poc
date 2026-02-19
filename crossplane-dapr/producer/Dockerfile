@@ -1,34 +1,27 @@
-# Stage 1: Build using the project's own Gradle Wrapper
 FROM eclipse-temurin:21-jdk-alpine AS build
-WORKDIR /home/gradle/src
+WORKDIR /workspace
 
-# Copy the gradle wrapper and configuration first (for layer caching)
 COPY gradlew gradlew
 COPY gradle gradle
-COPY gradle.properties gradle.properties
-COPY settings.gradle.kts settings.gradle.kts
-COPY build.gradle.kts build.gradle.kts
+COPY settings.gradle.kts build.gradle.kts gradle.properties ./
+COPY common/build.gradle.kts common/build.gradle.kts
+COPY producer/build.gradle.kts producer/build.gradle.kts
+COPY consumer/build.gradle.kts consumer/build.gradle.kts
 
-# Give execution permission to the wrapper
 RUN chmod +x gradlew
+RUN ./gradlew :producer:dependencies --no-daemon
 
-# Download dependencies (this layer is cached unless build.gradle.kts changes)
-RUN ./gradlew --version
+COPY common/src common/src
+COPY producer/src producer/src
 
-# Copy source and build
-COPY src src
-RUN ./gradlew buildFatJar --no-daemon
+RUN ./gradlew :producer:buildFatJar --no-daemon
 
-# Stage 2: Tiny Runtime
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Non-root user for SRE security best practices
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
-# Copy the built jar from the build stage
-COPY --from=build /home/gradle/src/build/libs/producer-all.jar .
+COPY --from=build /workspace/producer/build/libs/producer-all.jar app.jar
 
-# Use Optimized JVM flags for container environments
-ENTRYPOINT ["java", "-XX:+UseParallelGC", "-XX:MaxRAMPercentage=75.0", "-jar", "producer-all.jar"]
+ENTRYPOINT ["java", "-XX:+UseParallelGC", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
