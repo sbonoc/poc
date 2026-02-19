@@ -74,16 +74,6 @@ echo "⏳ Waiting for control planes to initialize (max 2 mins)..."
 kubectl wait --for=condition=Ready pods --all -n $NAMESPACE_DAPR --timeout=120s
 kubectl wait --for=condition=Ready pods --all -n $NAMESPACE_XP --timeout=120s
 
-echo "🔧 Installing Crossplane Logic Functions..."
-kubectl apply -f - <<EOF
-apiVersion: pkg.crossplane.io/v1
-kind: Function
-metadata:
-  name: function-patch-and-transform
-spec:
-  package: xpkg.upbound.io/crossplane-contrib/function-patch-and-transform:v0.7.0
-EOF
-
 # --- 3. INFRASTRUCTURE CONTRACT (XRD) ---
 echo "📜 Applying Crossplane XRD..."
 kubectl apply -k infra/base/crds/
