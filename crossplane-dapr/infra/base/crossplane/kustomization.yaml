@@ -1,0 +1,3 @@
+resources:
+  - xrd-messagebus.yaml
+  - composition-messagebus.yaml

@@ -3,11 +3,6 @@ kind: Component
 metadata:
   name: order-pubsub
 spec:
-  type: pubsub.gcp.pubsub
-  version: v1
   metadata:
     - name: projectId
-      value: local-project
-scopes:
-  - producer
-  - consumer
+      value: your-gcp-project-id

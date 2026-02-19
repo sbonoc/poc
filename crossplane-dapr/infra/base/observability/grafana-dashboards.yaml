@@ -1,0 +1,302 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+data:
+  service-overview.json: |
+    {
+      "id": null,
+      "uid": "service-overview",
+      "title": "Crossplane Dapr - Service Overview",
+      "tags": ["crossplane-dapr", "producer", "consumer"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "10s",
+      "time": {
+        "from": "now-30m",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Publish Throughput (req/s)",
+          "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(orders_publish_requests_total[5m]))"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Consume Throughput (req/s)",
+          "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(orders_consume_requests_total[5m]))"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Published Events (req/s)",
+          "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(orders_published_total[5m]))"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "Consumed Events (req/s)",
+          "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(orders_consumed_total[5m]))"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "HTTP Error Rate by Job",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(http_server_errors_total[5m])) by (job)"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "Collector Accepted Spans",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(otelcol_receiver_accepted_spans_total[5m]))"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        }
+      ]
+    }
+  event-flow.json: |
+    {
+      "id": null,
+      "uid": "event-flow",
+      "title": "Crossplane Dapr - Event Flow",
+      "tags": ["crossplane-dapr", "events", "dapr"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "10s",
+      "time": {
+        "from": "now-30m",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Publish vs Consume Rate",
+          "gridPos": {"h": 9, "w": 24, "x": 0, "y": 0},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(orders_publish_requests_total[5m]))",
+              "legendFormat": "publish"
+            },
+            {
+              "refId": "B",
+              "expr": "sum(rate(orders_consume_requests_total[5m]))",
+              "legendFormat": "consume"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Producer and Consumer HTTP Requests",
+          "gridPos": {"h": 9, "w": 24, "x": 0, "y": 9},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(ktor_http_server_requests_seconds_count{job=\"producer\"}[5m]))",
+              "legendFormat": "producer"
+            },
+            {
+              "refId": "B",
+              "expr": "sum(rate(ktor_http_server_requests_seconds_count{job=\"consumer\"}[5m]))",
+              "legendFormat": "consumer"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 3,
+          "type": "text",
+          "title": "Trace Exploration",
+          "gridPos": {"h": 6, "w": 24, "x": 0, "y": 18},
+          "options": {
+            "mode": "markdown",
+            "content": "Use **Explore** with Tempo datasource and query by service names:\n- `{ resource.service.name=\"producer\" }`\n- `{ resource.service.name=\"consumer\" }`\n\nThis stack exports traces through OTLP to the collector and stores them in Tempo."
+          }
+        }
+      ]
+    }
+  golden-signals.json: |
+    {
+      "id": null,
+      "uid": "golden-signals",
+      "title": "Crossplane Dapr - Golden Signals",
+      "tags": ["crossplane-dapr", "golden-signals", "producer", "consumer"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "10s",
+      "time": {
+        "from": "now-30m",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Traffic - HTTP Requests/s",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(ktor_http_server_requests_seconds_count{job=~\"producer|consumer\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) by (job)",
+              "legendFormat": "{{job}}"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Latency - Average (ms)",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "(sum(rate(ktor_http_server_requests_seconds_sum{job=~\"producer|consumer\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) by (job) / clamp_min(sum(rate(ktor_http_server_requests_seconds_count{job=~\"producer|consumer\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) by (job), 0.001)) * 1000",
+              "legendFormat": "{{job}}"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Latency - Max Over 5m (ms)",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+          "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by (job) (max_over_time(ktor_http_server_requests_seconds_max{job=~\"producer|consumer\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) * 1000",
+              "legendFormat": "{{job}}"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Error Rate - 5xx (%)",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+          "fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "100 * sum(rate(ktor_http_server_requests_seconds_count{job=~\"producer|consumer\",status=~\"5..\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) by (job) / clamp_min(sum(rate(ktor_http_server_requests_seconds_count{job=~\"producer|consumer\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) by (job), 0.001)",
+              "legendFormat": "{{job}}"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Error Traffic - 4xx/5xx Requests/s",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+          "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(ktor_http_server_requests_seconds_count{job=~\"producer|consumer\",status=~\"4..|5..\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) by (job)",
+              "legendFormat": "{{job}}"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "Saturation - Process CPU Usage (%)",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+          "fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "avg_over_time(process_cpu_usage{job=~\"producer|consumer\"}[5m]) * 100",
+              "legendFormat": "{{job}}"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "Saturation - JVM Heap Usage (%)",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+          "fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "100 * sum(jvm_memory_used_bytes{job=~\"producer|consumer\",area=\"heap\"}) by (job) / clamp_min(sum(jvm_memory_max_bytes{job=~\"producer|consumer\",area=\"heap\"}) by (job), 1)",
+              "legendFormat": "{{job}}"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "Saturation - In-flight HTTP Requests",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+          "fieldConfig": {"defaults": {"unit": "none"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(ktor_http_server_requests_active{job=~\"producer|consumer\",route!~\"/metrics|/health/live|/health/ready\"}) by (job)",
+              "legendFormat": "{{job}}"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        }
+      ]
+    }

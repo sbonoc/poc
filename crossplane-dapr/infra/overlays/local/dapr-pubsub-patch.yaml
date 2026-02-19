@@ -3,11 +3,8 @@ kind: Component
 metadata:
   name: order-pubsub
 spec:
-  type: pubsub.gcp.pubsub
-  version: v1
   metadata:
     - name: projectId
       value: local-project
-scopes:
-  - producer
-  - consumer
+    - name: endpoint
+      value: gcp-emulator.crossplane-system.svc.cluster.local:8085

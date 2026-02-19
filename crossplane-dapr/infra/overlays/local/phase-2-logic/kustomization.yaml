@@ -1,9 +1,0 @@
-resources:
-  - composition.yaml
-  - provider-config.yaml
-  - bus-claim.yaml
-  - emulator.yaml
-
-# This ensures all resources in this phase share a common context
-commonAnnotations:
-  agnostic.systems/phase: "logic"

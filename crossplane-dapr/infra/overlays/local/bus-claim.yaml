@@ -1,0 +1,9 @@
+apiVersion: agnostic.systems/v1alpha1
+kind: MessageBus
+metadata:
+  name: orders-bus
+spec:
+  parameters:
+    topicName: orders
+    projectId: local-project
+    providerConfigName: local-emulator-config

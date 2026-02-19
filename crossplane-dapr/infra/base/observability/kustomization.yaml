@@ -1,0 +1,11 @@
+resources:
+  - otel-collector-config.yaml
+  - otel-collector.yaml
+  - tempo-config.yaml
+  - tempo.yaml
+  - prometheus-config.yaml
+  - prometheus.yaml
+  - grafana-datasources.yaml
+  - grafana-dashboard-provider.yaml
+  - grafana-dashboards.yaml
+  - grafana.yaml

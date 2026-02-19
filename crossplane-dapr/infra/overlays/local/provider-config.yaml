@@ -5,4 +5,8 @@ metadata:
 spec:
   projectID: local-project
   credentials:
-    source: None
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: gcp-emulator-credentials
+      key: creds

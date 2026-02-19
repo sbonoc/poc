@@ -1,0 +1,27 @@
+resources:
+  - ../../base/crossplane
+  - ../../base/runtime
+  - ../../base/apps
+  - ../../base/observability
+  - crossplane-provider.yaml
+  - crossplane-function.yaml
+  - provider-config.yaml
+  - bus-claim.yaml
+
+patches:
+  - path: dapr-pubsub-patch.yaml
+  - path: apps-env-patch.yaml
+  - path: grafana-security-patch.yaml
+
+images:
+  - name: agnostic-producer
+    newName: ghcr.io/your-org/agnostic-producer
+    newTag: latest
+  - name: agnostic-consumer
+    newName: ghcr.io/your-org/agnostic-consumer
+    newTag: latest
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: crossplane-dapr
+      app.kubernetes.io/environment: prod

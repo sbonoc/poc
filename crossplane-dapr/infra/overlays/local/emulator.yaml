@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gcp-emulator
+  namespace: crossplane-system
+spec:
+  selector:
+    matchLabels:
+      app: gcp-emulator
+  template:
+    metadata:
+      labels:
+        app: gcp-emulator
+    spec:
+      containers:
+        - name: emulator
+          image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+          command:
+            - gcloud
+            - beta
+            - emulators
+            - pubsub
+            - start
+            - --project=local-project
+            - --host-port=0.0.0.0:8085
+          ports:
+            - containerPort: 8085
+              name: pubsub
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 300m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gcp-emulator
+  namespace: crossplane-system
+spec:
+  selector:
+    app: gcp-emulator
+  ports:
+    - name: pubsub
+      port: 8085
+      targetPort: pubsub
