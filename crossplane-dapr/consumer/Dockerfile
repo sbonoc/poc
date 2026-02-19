@@ -5,6 +5,7 @@ WORKDIR /home/gradle/src
 # Copy the gradle wrapper and configuration first (for layer caching)
 COPY gradlew .
 COPY gradle gradle
+COPY gradle.properties gradle.properties
 COPY build.gradle.kts .
 COPY settings.gradle.kts .
 
