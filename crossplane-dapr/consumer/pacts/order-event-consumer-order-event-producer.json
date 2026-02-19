@@ -1,0 +1,48 @@
+{
+  "consumer": {
+    "name": "order-event-consumer"
+  },
+  "interactions": [
+    {
+      "contents": {
+        "content": {
+          "amount": 55.1,
+          "eventVersion": "v1",
+          "id": "ORD-300"
+        },
+        "contentType": "application/json",
+        "encoded": false
+      },
+      "description": "an order created v1 event",
+      "key": "",
+      "matchingRules": {
+        "body": {
+          "$.amount": {
+            "combine": "AND",
+            "matchers": [
+              {
+                "match": "number"
+              }
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "contentType": "application/json"
+      },
+      "pending": false,
+      "type": "Asynchronous/Messages"
+    }
+  ],
+  "metadata": {
+    "pact-jvm": {
+      "version": "4.6.17"
+    },
+    "pactSpecification": {
+      "version": "4.0"
+    }
+  },
+  "provider": {
+    "name": "order-event-producer"
+  }
+}
