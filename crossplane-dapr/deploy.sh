@@ -56,7 +56,7 @@ fi
 # Check for Dapr in-cluster
 if ! kubectl get ns $NAMESPACE_DAPR > /dev/null 2>&1; then
     echo "🚀 Initializing Dapr in Kubernetes..."
-    dapr init -k
+    dapr init -k --runtime-version 1.16.9
 else
     echo "✅ Dapr control plane already exists."
 fi
@@ -65,7 +65,7 @@ fi
 if ! kubectl get ns $NAMESPACE_XP > /dev/null 2>&1; then
     echo "🏗️ Installing Crossplane via Helm..."
     helm repo add crossplane-stable https://charts.crossplane.io/stable --force-update
-    helm install crossplane crossplane-stable/crossplane --namespace $NAMESPACE_XP --create-namespace
+    helm install crossplane crossplane-stable/crossplane --namespace $NAMESPACE_XP --create-namespace --version 2.2.0
 else
     echo "✅ Crossplane control plane already exists."
 fi
