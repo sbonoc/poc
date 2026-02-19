@@ -24,7 +24,7 @@ build/
 *.rar
 
 # Preserve Gradle wrapper and specific src builds
-!gradle/wrapper/gradle-wrapper.jar
+!**/gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
