@@ -1,2 +1,3 @@
 resources:
   - dapr-pubsub.yaml
+  - dapr-config.yaml

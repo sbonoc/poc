@@ -1,0 +1,10 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: order-pubsub
+spec:
+  metadata:
+    - name: projectId
+      value: local-project
+    - name: endpoint
+      value: gcp-emulator.crossplane-system.svc.cluster.local:8085

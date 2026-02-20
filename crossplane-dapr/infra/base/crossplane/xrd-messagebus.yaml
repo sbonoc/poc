@@ -1,0 +1,36 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xmessagebuses.agnostic.systems
+spec:
+  group: agnostic.systems
+  names:
+    kind: XMessageBus
+    plural: xmessagebuses
+  claimNames:
+    kind: MessageBus
+    plural: messagebuses
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  type: object
+                  properties:
+                    topicName:
+                      type: string
+                    projectId:
+                      type: string
+                    providerConfigName:
+                      type: string
+                  required:
+                    - topicName
+              required:
+                - parameters

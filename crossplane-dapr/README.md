@@ -1,75 +1,85 @@
 # 🚀 Cloud-Agnostic Event-Driven Microservices Stack
 
-Welcome to a fully local and prod-like, cloud-agnostic microservices environment! This project demonstrates how to build highly decoupled, event-driven applications using **Kotlin (Ktor)**, **Dapr**, and **Crossplane** running entirely on local Kubernetes.
+Welcome to a fully local and prod-like, cloud-agnostic microservices environment.
+This project demonstrates how to build highly decoupled, event-driven applications using **Kotlin (Ktor)**, **Dapr**, and **Crossplane** on Kubernetes, with first-class **OpenTelemetry observability** and a **Shift-Left testing strategy**.
 
-## 🌟 The Core Philosophy: Why is this stack so powerful?
+## 🌟 The Core Philosophy: Why is this stack powerful?
 
-Traditional microservices often suffer from heavy vendor lock-in. If you write code directly against the AWS or GCP SDKs, migrating clouds requires a complete rewrite. Furthermore, developers often have to wait on Ops teams to provision infrastructure. 
+Traditional microservices often couple application code directly to cloud SDKs. That creates migration friction, slows down developer autonomy, and makes local validation expensive.
 
-This stack solves both problems:
+This stack addresses those problems:
 
-1. **Zero App-Level Vendor Lock-in:** The Ktor applications **do not** contain any Google Cloud SDKs. They communicate via simple HTTP to a local Dapr sidecar. Dapr handles the complex translation to GCP Pub/Sub. If we move to AWS tomorrow, the application code *does not change*.
-2. **Infrastructure as Software:** Instead of running Terraform manually, **Crossplane** runs inside Kubernetes. It constantly monitors our cluster and automatically provisions the required cloud resources (or local emulators) based on simple YAML files.
-3. **Developer Self-Service:** A developer just writes a generic "Claim" (`bus-claim.yaml`) saying, *"I need a message bus."* Crossplane reads this and builds the underlying infrastructure automatically based on rules set by Platform Engineers.
-4. **100% Free Local Development:** By using the GCP Pub/Sub Emulator, we can test full cloud-native event flows locally without spending a dime or needing cloud credentials.
+1. **Zero app-level vendor lock-in:** `producer` and `consumer` do not call Google Cloud SDKs directly. They talk to local Dapr sidecars over HTTP, and Dapr handles broker-specific details.
+2. **Infrastructure as software:** Crossplane runs inside Kubernetes and reconciles cloud resources from Kubernetes manifests.
+3. **Developer self-service:** App teams request a high-level `MessageBus` claim and platform composition translates it into concrete managed resources.
+4. **Free local development:** Local mode uses a Pub/Sub emulator, so full event flow can run without real cloud credentials.
+5. **Production-grade feedback loops:** You get traces, metrics, dashboards, contract tests, and quality gates from day one.
 
 ---
 
 ## 🏗️ Architecture Breakdown
 
-Here is the step-by-step purpose of each component in this repository:
+### 1. Applications (`producer` and `consumer`)
 
-### 1. The Applications (Ktor Producer & Consumer)
-* **Purpose:** The actual business logic. The `producer` generates events (e.g., a new order), and the `consumer` processes them.
-* **Why Ktor?** It's a lightweight, fully asynchronous Kotlin framework built on coroutines, making it incredibly fast and efficient for microservices.
+- **Purpose:** business logic only.
+- `producer` exposes `POST /publish` and emits `OrderCreatedV1`.
+- `consumer` exposes `GET /dapr/subscribe` and receives events on `/orders`.
 
 ### 2. Dapr (Distributed Application Runtime)
-* **Purpose:** The sidecar that sits next to your application container.
-* **How it works:** The Producer sends a generic HTTP POST to its local Dapr sidecar. Dapr wraps it in a standard CloudEvent and sends it to the message broker. The Consumer's Dapr sidecar listens to the broker and POSTs the message to the Consumer's `/orders` HTTP endpoint.
+
+- **Purpose:** sidecar abstraction for pub/sub.
+- `producer` sends a publish call to Dapr, Dapr maps it to the configured component.
+- `consumer` declares subscriptions via `/dapr/subscribe`; Dapr pushes matching messages to the route.
 
 ### 3. Crossplane
-* **Purpose:** The Kubernetes-native infrastructure control plane.
-* **How it works:** We installed the Crossplane GCP Provider and a "Composition" pipeline. When we apply our `bus-claim.yaml`, Crossplane detects it, runs it through a patching function (`function-patch-and-transform`), and dynamically provisions the required Pub/Sub topics.
 
+- **Purpose:** Kubernetes-native control plane for infrastructure.
+- An app-facing `MessageBus` claim is reconciled into a GCP Pub/Sub `Topic` managed resource using composition.
 
+### 4. GCP Pub/Sub Emulator (local overlay)
 
-### 4. GCP Emulator
-* **Purpose:** A local container mimicking Google Cloud Pub/Sub. 
-* **How it works:** Crossplane provisions topics *inside* this emulator instead of the real Google Cloud, and Dapr routes messages through it.
+- **Purpose:** local broker behavior without cloud spend.
+- Crossplane and Dapr are configured to point to emulator endpoints in local mode.
 
-```plaintext
-+-------------------------------------------------------------------------+
-|                        LOCAL KUBERNETES CLUSTER                         |
-|                                                                         |
-|   +-------------------+                        +-------------------+    |
-|   |   PRODUCER POD    |                        |   CONSUMER POD    |    |
-|   |                   |                        |                   |    |
-|   | +---------------+ |                        | +---------------+ |    |
-|   | |   Ktor App    | |                        | |   Ktor App    | |    |
-|   | | (POST /publish) |                        | | (POST /orders)| |    |
-|   | +-------+-------+ |                        | +-------^-------+ |    |
-|   |         | HTTP    |                        |         | HTTP    |    |
-|   | +-------v-------+ |                        | +-------+-------+ |    |
-|   | | Dapr Sidecar  | |                        | | Dapr Sidecar  | |    |
-|   | | (daprd)       | |                        | | (daprd)       | |    |
-|   | +-------+-------+ |                        | +-------^-------+ |    |
-|   +---------|---------+                        +---------|---------+    |
-|             |                                            |              |
-|             | Publishes Event             Subscribes & Pulls Event      |
-|             | (CloudEvent format)                        |              |
-|   +---------v--------------------------------------------+---------+    |
-|   |                                                                |    |
-|   |                 GCP PUB/SUB EMULATOR (Broker)                  |    |
-|   |                     [Topic: 'orders']                          |    |
-|   |                                                                |    |
-|   +----------------------------------------------------------------+    |
-|                                 ^                                       |
-|                                 | Provisions & Configures Topic         |
-|   +-----------------------------+----------------------------------+    |
-|   |                        CROSSPLANE                              |    |
-|   |  (Reads 'bus-claim.yaml' -> Executes 'patch-and-transform')    |    |
-|   +----------------------------------------------------------------+    |
-+-------------------------------------------------------------------------+
+### 5. Observability Stack
+
+- **OpenTelemetry Collector** receives OTLP telemetry from apps.
+- **Tempo** stores traces.
+- **Prometheus** scrapes app and collector metrics.
+- **Grafana** visualizes dashboards (including Golden Signals).
+
+```text
++--------------------------------------------------------------------------+
+|                        KUBERNETES CLUSTER                                |
+|                                                                          |
+| [APP NAMESPACE]                                                          |
+| producer Pod                     consumer Pod                            |
+| +---------------------------+    +---------------------------+           |
+| | Ktor producer             |    | Ktor consumer             |           |
+| | POST /publish             |    | GET /dapr/subscribe       |           |
+| +------------+--------------+    | POST /orders              |           |
+|              | localhost:3500    +------------^--------------+           |
+| +------------v--------------+                 | localhost:3500            |
+| | daprd (producer)          |                 |                           |
+| +------------+--------------+    +------------+--------------+           |
+|              | publish evt       | daprd (consumer)          |           |
+|              +------------------>| subscribe + push          |           |
+|                                  +------------^--------------+           |
+|                                               |                          |
+|            +----------------------------------+------------------------+ |
+|            | Dapr component: order-pubsub (topic=orders)             | |
+|            +----------------------------------+------------------------+ |
+|                                               |                          |
+|                                               v                          |
+|     local: gcp-emulator...:8085  |  prod: GCP Pub/Sub                  |
+|                                                                          |
+| [OBSERVABILITY]                                                          |
+| apps + daprd -> OTLP -> otel-collector -> tempo                         |
+|                                 -> prometheus -> grafana                |
+|                                                                          |
+| [CROSSPLANE-SYSTEM]                                                      |
+| MessageBus claim -> XRD/Composition -> managed Topic                    |
++--------------------------------------------------------------------------+
 ```
 
 ---
@@ -77,201 +87,281 @@ Here is the step-by-step purpose of each component in this repository:
 ## 🚀 Getting Started
 
 ### Prerequisites
-* Docker Desktop (or OrbStack/Colima)
-* A local Kubernetes cluster (Docker Desktop built-in, or KinD/Minikube)
-* `kubectl` and `helm` installed on your machine.
 
-### 1. Deploy the Environment
-We have scripted the entire bootstrapping process. This script builds your local Docker images, applies the Crossplane infrastructure definitions, and deploys your Ktor apps.
+- Docker Desktop / OrbStack / Colima
+- Local Kubernetes cluster
+- `kubectl`
+- `helm`
+- Dapr CLI (`dapr`)
+- Java 21 (for local Gradle execution)
+
+### 1. Discover available commands
+
+```bash
+make help
+./deploy.sh --help
+./teardown.sh --help
+```
+
+### 2. Deploy local environment
 
 ```bash
 ./deploy.sh
 ```
 
-_Note: The first time you run this, it may take a few minutes for Crossplane to download its providers and establish the emulators._
+Equivalent:
 
-### 2. Test the Event Flow
+```bash
+make deploy-local
+```
 
-Once the pods are running (`kubectl get pods`), you can trigger an event by port-forwarding the producer and sending a curl request.
+Optional namespace override:
 
-Open a new terminal and watch the consumer logs:
+```bash
+APP_NAMESPACE=agnostic-local make deploy-local
+```
+
+### 3. Expose producer and Grafana locally
+
+```bash
+make port-forward-local
+```
+
+Or deploy and port-forward in one step:
+
+```bash
+./deploy.sh --port-forward
+```
+
+### 4. Drive traffic and verify event flow
+
+Open one terminal and follow consumer logs:
+
 ```bash
 kubectl logs -f -l app=consumer -c consumer
 ```
 
-### 3. Clean Up (Save Your Battery! 🔋)
+In another terminal:
 
-Running multiple control planes locally is heavy. When you are done developing, run the teardown script to gracefully destroy the infrastructure, apps, and Crossplane/Dapr control planes.
+```bash
+make smoke-test
+```
+
+### 5. Open Grafana and inspect metrics/traces
+
+- URL: `http://localhost:3000`
+- Local overlay enables anonymous admin for convenience.
+- Dashboards are provisioned automatically:
+  - `Crossplane Dapr - Service Overview`
+  - `Crossplane Dapr - Event Flow`
+  - `Crossplane Dapr - Golden Signals`
+
+To find traces in Tempo:
+
+1. Open Grafana `Explore`.
+2. Select `Tempo` datasource.
+3. Query `{ resource.service.name="producer" }` or `{ resource.service.name="consumer" }`.
+4. If empty, generate traffic with `make smoke-test` and query last 30 minutes.
+
+### 6. Teardown
 
 ```bash
 ./teardown.sh
 ```
 
-## 🧠 Deep Dive: The Configuration Files
+Optional full cleanup (remove control planes too):
 
-This stack relies on a strict separation of concerns. Developers only care about their application code and a simple "Claim", while Platform Engineers configure the underlying Dapr components and Crossplane compositions. 
-
-Here is exactly what each file does.
-
-### 🏗️ Crossplane Infrastructure Files
-
-Crossplane turns Kubernetes into a universal control plane. We split this into "Plumbing" (Platform Setup) and "Logic" (Developer Usage).
-
-* **`infra/base/crds/definition.yaml` (The XRD)**
-    * **What it is:** The Composite Resource Definition.
-    * **Why we need it:** This is the API contract. It defines a custom Kubernetes resource (e.g., `MessageBus`). It tells Kubernetes: *"Allow developers to request a MessageBus and give them fields like `topicName`."*
-
-* **`infra/overlays/local/phase-1-plumbing/provider.yaml`**
-    * **What it is:** Installs the `provider-gcp-pubsub` and configures it via `DeploymentRuntimeConfig`.
-    * **Why we need it:** The Provider contains the actual code to talk to GCP. The `DeploymentRuntimeConfig` is crucial here: it injects the `PUBSUB_EMULATOR_HOST` environment variable into the Provider pod. This tricks Crossplane into building infrastructure inside our local emulator instead of reaching out to the real Google Cloud!
-
-* **`infra/overlays/local/phase-2-logic/composition.yaml`**
-    * **What it is:** The translation engine.
-    * **Why we need it:** When a developer asks for a `MessageBus`, this file tells Crossplane *how* to build it. It uses a pipeline function (`function-patch-and-transform`) to take the developer's requested `topicName` and map it to a concrete GCP `PubSubTopic` managed resource.
-
-* **`infra/overlays/local/phase-2-logic/bus-claim.yaml`**
-    * **What it is:** The Developer's Request.
-    * **Why we need it:** This is the only infrastructure file an app developer touches. It simply says, *"I want an instance of a MessageBus named 'orders-bus'."* Crossplane detects this and triggers the `composition.yaml`.
+```bash
+./teardown.sh --all
+```
 
 ---
 
-### 🛜 Dapr Configuration Files
+## 🧠 Deep Dive: Configuration Files
 
-Dapr abstracts away the message broker so our Ktor apps don't need Google Cloud SDKs.
+### 🏗️ Crossplane Infrastructure Files
 
-* **`infra/base/runtime/dapr-pubsub.yaml` (The Component)**
-    * **What it is:** A Dapr `Component` Custom Resource named `order-pubsub`.
-    * **Why we need it:** When the Ktor producer calls `dapr.publishEvent("order-pubsub", ...)`, it has no idea *what* `order-pubsub` actually is. Dapr intercepts that call, looks up this YAML file, and sees `type: pubsub.gcp.pubsub`.
-    * **The Emulator Magic:** The `metadata` section is the secret sauce for local development. By hardcoding the `endpoint` to `"gcp-emulator:8085"`, we explicitly tell the Dapr sidecar to ignore the real internet and route all traffic to our local Crossplane-managed emulator. The `projectId` is just a dummy value to satisfy the GCP SDK's requirements!
+- **`infra/base/crossplane/xrd-messagebus.yaml`**
+  Defines the platform API (`MessageBus` claim / `XMessageBus` composite) with parameters such as `topicName`, optional `projectId`, and `providerConfigName`.
 
-* **`consumer/k8s-deployment.yaml` & `producer/k8s-deployment.yaml` (The Annotations)**
-    * **What it is:** Standard Kubernetes deployments, injected with Dapr magic.
-    * **Why we need it:** * `dapr.io/enabled: "true"` tells the Dapr operator to inject the sidecar container (`daprd`) into our pod.
-        * `dapr.io/app-id` gives our app a unique identity on the Dapr network.
-        * `dapr.io/app-port: "8080"` (Crucial for the Consumer!) tells the Dapr sidecar which local port the Ktor application is listening on, so it knows exactly where to POST incoming Pub/Sub messages.
+- **`infra/base/crossplane/composition-messagebus.yaml`**
+  Composition pipeline that maps a `MessageBus` claim into a concrete `pubsub.gcp.upbound.io/v1beta1 Topic` managed resource.
 
-* **The Ktor `/dapr/subscribe` Route (Programmatic Subscription)**
-    * **What it is:** Instead of writing another YAML file, our Ktor consumer has a dedicated HTTP endpoint.
-    * **Why we need it:** When the consumer's Dapr sidecar boots up, it calls this endpoint to ask the app: *"What topics do you care about?"* The app replies with JSON linking the `orders` topic on the `order-pubsub` component to the local `/orders` HTTP route.
+- **`infra/overlays/local/crossplane-runtime-config.yaml`**
+  Injects `PUBSUB_EMULATOR_HOST` into the Crossplane provider runtime so reconciliation targets the emulator.
 
-## 🌍 Path to Production: Moving to Real GCP (or any other)
+- **`infra/overlays/local/crossplane-provider.yaml`**
+  Installs the GCP Pub/Sub provider package with the local runtime config.
 
-The true power of this Agnostic Architecture reveals itself when it's time to deploy to a real production environment (like Google Kubernetes Engine - GKE). 
+- **`infra/overlays/local/provider-config.yaml`**
+  Local `ProviderConfig` that points to emulator credentials secret.
 
-Because we decoupled the application code from the infrastructure, **you do not need to change a single line of Kotlin code to run in production.** You only update the YAML configurations to point to real Google Cloud services instead of local emulators.
+- **`infra/overlays/local/bus-claim.yaml`**
+  Developer-facing claim (`orders-bus`) requesting topic `orders`.
 
-Here is the exact checklist for production migration:
+- **`scripts/create-local-gcp-emulator-secret.sh`**
+  Generates emulator-only service account JSON and creates the secret in `crossplane-system`.
 
-### 1. The Application Code (Ktor)
-* **What changes:** Absolutely nothing.
-* **Why:** The app only knows how to speak HTTP to `localhost:3500` (the Dapr sidecar). It is blissfully unaware whether Dapr is talking to an emulator, real GCP, or AWS.
+### 🛜 Dapr Runtime Files
 
-### 2. Crossplane Configuration (Infrastructure)
-To make Crossplane provision real topics in Google Cloud, you must remove the emulator hacks and provide real credentials.
+- **`infra/base/runtime/dapr-config.yaml`**
+  Dapr configuration with tracing enabled and OTLP export to collector (`otel-collector:4317`).
 
-* **Remove the Emulator Injection:** Delete `DeploymentRuntimeConfig` from Phase 1. The GCP Provider pod no longer needs the `PUBSUB_EMULATOR_HOST` environment variable.
-* **Create a GCP Service Account:** Create a Service Account in GCP with the `Pub/Sub Admin` role and download its JSON key.
-* **Create a Kubernetes Secret:** Store that JSON key securely in your cluster:
+- **`infra/base/runtime/dapr-pubsub.yaml`**
+  Base `order-pubsub` component (GCP pub/sub type).
 
-  ```bash
-  kubectl create secret generic gcp-secret -n crossplane-system --from-file=creds=./gcp-credentials.json
-  ```
-* **Update the `ProviderConfig`:** Tell Crossplane to use that secret to authenticate against the real GCP API.
+- **`infra/overlays/local/dapr-pubsub-patch.yaml`**
+  Local patch sets `projectId=local-project` and emulator endpoint.
 
-```yaml
-apiVersion: gcp.upbound.io/v1beta1
-kind: ProviderConfig
-metadata:
-  name: default
-spec:
-  projectID: your-real-gcp-project-id
-  credentials:
-    source: Secret
-    secretRef:
-      namespace: crossplane-system
-      name: gcp-secret
-      key: creds
+- **`infra/overlays/prod/dapr-pubsub-patch.yaml`**
+  Production patch sets real project id and removes emulator dependency.
+
+### 🧩 Application Deployment Files
+
+- **`infra/base/apps/producer.yaml`**
+  Producer deployment/service with Dapr sidecar annotations, OTEL env vars, probes, security context, and resource limits.
+
+- **`infra/base/apps/consumer.yaml`**
+  Consumer deployment/service with Dapr annotations and subscription route config through app env vars.
+
+- **`producer/src/main/kotlin/com/agnostic/producer/routes/ProducerRoutes.kt`**
+  `POST /publish` endpoint, request validation, and publish path instrumentation/logging.
+
+- **`consumer/src/main/kotlin/com/agnostic/consumer/routes/ConsumerRoutes.kt`**
+  `GET /dapr/subscribe` and `POST /orders` handlers with parsing, processing, metrics, and logs.
+
+### 📈 Observability Files
+
+- **`infra/base/observability/otel-collector-config.yaml`**
+  OTLP receiver, trace export to Tempo, metric export for Prometheus scrape.
+
+- **`infra/base/observability/tempo-config.yaml`**
+  Tempo local storage and OTLP receiver config.
+
+- **`infra/base/observability/prometheus-config.yaml`**
+  Scrape jobs for `otel-collector`, `producer`, and `consumer`.
+
+- **`infra/base/observability/grafana-datasources.yaml`**
+  Provisioned datasources for Prometheus and Tempo.
+
+- **`infra/base/observability/grafana-dashboards.yaml`**
+  Provisioned dashboards including Golden Signals (traffic, latency, errors, saturation) for both services.
+
+### 🤝 Contract Testing (Pact)
+
+- **`consumer/src/contractTest/kotlin/com/agnostic/consumer/contract/ConsumerPactContractTest.kt`**
+  Consumer test defines expected async message contract and generates pact file.
+
+- **`consumer/pacts/order-event-consumer-order-event-producer.json`**
+  Generated pact artifact, committed to source control.
+
+- **`producer/src/contractTest/kotlin/com/agnostic/producer/contract/ProducerPactVerificationTest.kt`**
+  Provider verification test loads pact from `../consumer/pacts` and validates produced message contract.
+
+---
+
+## 🧪 Shift-Left Test Strategy
+
+The test pyramid is codified as separate Gradle suites in each module:
+
+- Unit tests first (`test`) and most numerous.
+- Fewer integration tests (`integrationTest`).
+- Contract tests (`contractTest`) for service boundaries.
+- Minimal E2E smoke (`e2eTest`, opt-in).
+
+Useful commands:
+
+```bash
+make unit-test
+make integration-test
+make contract-test
+make e2e-test
+make quality
+make verify
 ```
 
-### 3. Dapr Configuration (Runtime)
+Pact workflow:
 
-Dapr also needs to know to stop routing messages to the emulator and start routing them to the real GCP Pub/Sub.
-
-* **Update** `infra/base/runtime/dapr-pubsub.yaml`:
-
-    * **Remove** the `endpoint: "gcp-emulator:8085"` metadata field entirely.
-    * **Update** `projectId` to your actual GCP Project ID.
-    * **Add Authentication:** Provide Dapr with the means to authenticate. On GKE, the best practice is to use Workload Identity (binding a Kubernetes Service Account to a GCP Service Account), or by passing a secret similar to Crossplane.
-
-```yaml
-apiVersion: dapr.io/v1alpha1
-kind: Component
-metadata:
-  name: order-pubsub
-  namespace: default
-spec:
-  type: pubsub.gcp.pubsub
-  version: v1
-  metadata:
-    - name: projectId
-      value: "your-real-gcp-project-id"
-    # The endpoint is removed. Dapr defaults to the real GCP API.
-    # Authentication is securely handled by GKE Workload Identity automatically!
+```bash
+make pact-regenerate
 ```
 
-Once these YAMLs are updated, running `./deploy.sh` will cause Crossplane to reach out to Google Cloud, physically build the Pub/Sub topic in your GCP console, and wire Dapr directly to it!
+`pact-regenerate` executes provider contract verification and re-runs consumer pact generation as a dependency, keeping producer validation tied to the latest generated contract.
 
-## ☎️ So What?!
+CI pipeline is in **`.github/workflows/ci.yml`**, enforcing Shift-Left gates (unit, static checks, integration, contract, coverage) with E2E smoke only on manual dispatch.
 
-### 📉 1. The "Lowest Common Denominator" Trap (Feature Parity)
+---
 
-Because Dapr is designed to work with GCP, AWS SNS/SQS, Kafka, RabbitMQ, and Redis, its API must be generic. It only exposes features that all of those brokers share.
+## 🌍 Path to Production: Moving to Real GCP
 
-If you use the native GCP SDK, you get instant access to Google's specialized features. With Dapr, you lose (or struggle to implement) things like:
+The application code remains unchanged. Migration is mostly manifest and secret changes.
 
-Exactly-Once Delivery: GCP supports strict exactly-once delivery guarantees, but Dapr's generic API is built around "at-least-once" delivery.
+### 1. Application code
 
-Schema Validation: GCP Pub/Sub can enforce Avro or Protocol Buffer schemas at the topic level. Integrating this with Dapr's CloudEvent wrappers is clunky.
+- **No changes required** in `producer`, `consumer`, or shared contracts.
 
-Message Ordering: GCP allows you to guarantee the order of messages using "Ordering Keys." While Dapr recently added some metadata support for routing keys, it is not as robust or native as the GCP SDK.
+### 2. Crossplane configuration
 
-### ⏱️ 2. The Latency Penalty (The Extra Hop)
+- Use `infra/overlays/prod/provider-config.yaml` with real project id.
+- Create GCP credentials secret in `crossplane-system`.
 
-When you use the GCP SDK, your Kotlin application opens a highly optimized, multiplexed gRPC connection directly to Google's servers.
+```bash
+kubectl create secret generic gcp-secret -n crossplane-system \
+  --from-file=creds=./gcp-credentials.json
+```
 
-With Dapr, you introduce an extra network hop:
-`Ktor App -> (HTTP/gRPC) -> Local Dapr Sidecar -> (gRPC) -> Google Cloud`
+### 3. Dapr pub/sub configuration
 
-While the hop from your app to the sidecar over `localhost` is extremely fast (usually ~1-2 milliseconds), it is not zero. For 99% of microservices, this latency is invisible. But if you are building an ultra-low-latency system (like high-frequency trading or real-time gaming), the native SDK will always be faster.
+- Use `infra/overlays/prod/dapr-pubsub-patch.yaml` to point component metadata to real project id.
+- Ensure workload identity or equivalent auth strategy is configured in your target cluster.
 
-### 📥 3. Push vs. Streaming Pull Mechanics
+### 4. Grafana security
 
-Under the hood, Dapr connects to GCP Pub/Sub, pulls the messages, and then pushes them to your Ktor app via an HTTP POST request (e.g., POSTing to your `/orders` route).
+- Create admin credentials secret expected by `infra/overlays/prod/grafana-security-patch.yaml`.
 
-The Dapr Way: Your Ktor app acts like a web server receiving a flood of HTTP requests. You have to tune Ktor's connection limits and Dapr's `maxConcurrentMessages` metadata so Dapr doesn't accidentally DDoS your own app during traffic spikes.
+```bash
+kubectl create secret generic grafana-admin-credentials -n <app-namespace> \
+  --from-literal=username=admin \
+  --from-literal=password='change-me'
+```
 
-The Native SDK Way: The GCP SDK uses Streaming Pull. Your app opens a persistent connection and silently consumes messages at its own optimal pace. It is generally more resource-efficient for massive batch processing.
+### 5. Container images
 
-### 📦 4. The CloudEvents Wrapper (Interoperability)
+- Update `infra/overlays/prod/kustomization.yaml` image overrides to your real registry and immutable tags.
 
-Dapr wraps all outgoing messages in the standard CloudEvents JSON envelope.
+---
 
-If your entire company uses Dapr, this is great! But if you have a legacy Node.js or Python application that reads directly from GCP Pub/Sub using the native SDK, it is suddenly going to receive a CloudEvent JSON wrapper instead of the raw data it expects. You can configure Dapr to use rawPayload: true to bypass this, but it adds configuration friction.
+## ☎️ So What?! Tradeoffs to Be Aware Of
 
-### ⚙️ 5. Operational Overhead
+### 1. Feature parity tradeoff
 
-A native SDK is just a .jar file compiled into your application. If it crashes, you get a standard Java stack trace.
+Dapr intentionally exposes portable primitives. Some cloud-specific broker capabilities may be harder to use or unavailable through the generic API surface.
 
-Dapr requires you to run and monitor a completely separate distributed system:
+### 2. Extra network hop
 
-You have to allocate CPU and RAM to the daprd sidecar container.
+Path is `App -> Dapr sidecar -> Broker`. For most microservices this is acceptable, but ultra-low-latency workloads may prefer direct SDK access.
 
-You have to manage the lifecycle (e.g., ensuring Ktor doesn't try to send a message before the sidecar has finished booting).
+### 3. Delivery semantics and tuning
 
-Debugging requires looking at two sets of logs (App + Sidecar) instead of one.
+Dapr pushes to app routes and your service must handle throughput safely. Tune Dapr component metadata and app server concurrency as load grows.
 
-### ⚖️ The Verdict: When to use which?
+### 4. Event envelope interoperability
 
-**Use Dapr if:** You want to prevent vendor lock-in, you want to test locally without cloud credentials, your team uses multiple languages (Kotlin, Go, Python) and wants a unified messaging API, and you are building standard asynchronous microservices.
+CloudEvents are great for standardization, but mixed ecosystems sometimes require raw payload handling and explicit parser behavior.
 
-**Use the Native GCP SDK if:** Your application processes millions of messages per second where microseconds matter, you heavily rely on GCP-specific features like strict ordering/schemas, or you are building a data-streaming pipeline (like Apache Beam/Dataflow) rather than a web microservice.
+### 5. Operational overhead
+
+You operate app + sidecar + control planes. That raises observability and platform requirements, but this repository already includes those foundations.
+
+---
+
+## ✅ Quick Checklist
+
+For a healthy local run:
+
+1. `make deploy-local`
+2. `make port-forward-local`
+3. `make smoke-test`
+4. Check consumer logs for `Consumed order event`
+5. Open Grafana at `http://localhost:3000` and inspect Golden Signals + Tempo traces
+6. `./teardown.sh` when done

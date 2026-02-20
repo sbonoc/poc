@@ -1,0 +1,43 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xmessagebus.gcp.pubsub.agnostic.systems
+spec:
+  mode: Pipeline
+  compositeTypeRef:
+    apiVersion: agnostic.systems/v1alpha1
+    kind: XMessageBus
+  pipeline:
+    - step: patch-and-transform
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          - name: pubsub-topic
+            base:
+              apiVersion: pubsub.gcp.upbound.io/v1beta1
+              kind: Topic
+              metadata:
+                annotations:
+                  crossplane.io/external-name: placeholder
+              spec:
+                forProvider:
+                  project: local-project
+                providerConfigRef:
+                  name: local-emulator-config
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: "spec.parameters.topicName"
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+              - type: FromCompositeFieldPath
+                fromFieldPath: "spec.parameters.projectId"
+                toFieldPath: "spec.forProvider.project"
+                policy:
+                  fromFieldPath: Optional
+              - type: FromCompositeFieldPath
+                fromFieldPath: "spec.parameters.providerConfigName"
+                toFieldPath: "spec.providerConfigRef.name"
+                policy:
+                  fromFieldPath: Optional

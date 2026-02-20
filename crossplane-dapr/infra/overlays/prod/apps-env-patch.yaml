@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer
+spec:
+  template:
+    spec:
+      containers:
+        - name: producer
+          imagePullPolicy: Always
+          env:
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: deployment.environment=prod,service.namespace=agnostic
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer
+spec:
+  template:
+    spec:
+      containers:
+        - name: consumer
+          imagePullPolicy: Always
+          env:
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: deployment.environment=prod,service.namespace=agnostic

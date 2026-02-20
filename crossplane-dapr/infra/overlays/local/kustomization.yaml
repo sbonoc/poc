@@ -1,0 +1,15 @@
+resources:
+  - ../../base/runtime
+  - ../../base/apps
+  - ../../base/observability
+  - provider-config.yaml
+  - bus-claim.yaml
+
+patches:
+  - path: dapr-pubsub-patch.yaml
+  - path: grafana-local-auth-patch.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: crossplane-dapr
+      app.kubernetes.io/environment: local
