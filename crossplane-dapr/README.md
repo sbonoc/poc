@@ -1,7 +1,7 @@
 # 🚀 Cloud-Agnostic Event-Driven Microservices Stack
 
 Welcome to a fully local and prod-like, cloud-agnostic microservices environment.
-This project demonstrates how to build highly decoupled, event-driven applications using **Kotlin (Ktor)**, **Dapr**, and **Crossplane** on Kubernetes, with first-class **OpenTelemetry observability** and a **Shift-Left testing strategy**.
+This project demonstrates how to build highly decoupled, event-driven applications using **Kotlin (Ktor)**, **Go (Gin)**, and **Java (Spring Boot)** with **Dapr** and **Crossplane** on Kubernetes, plus first-class **OpenTelemetry observability** and a **Shift-Left testing strategy**.
 
 ## 🌟 The Core Philosophy: Why is this stack powerful?
 
@@ -9,7 +9,7 @@ Traditional microservices often couple application code directly to cloud SDKs. 
 
 This stack addresses those problems:
 
-1. **Zero app-level vendor lock-in:** `producer` and `consumer` do not call Google Cloud SDKs directly. They talk to local Dapr sidecars over HTTP, and Dapr handles broker-specific details.
+1. **Zero app-level vendor lock-in:** producer/consumer implementations do not call Google Cloud SDKs directly. They talk to local Dapr sidecars over HTTP, and Dapr handles broker-specific details.
 2. **Infrastructure as software:** Crossplane runs inside Kubernetes and reconciles cloud resources from Kubernetes manifests.
 3. **Developer self-service:** App teams request a high-level `MessageBus` claim and platform composition translates it into concrete managed resources.
 4. **Free local development:** Local mode uses a Pub/Sub emulator, so full event flow can run without real cloud credentials.
@@ -19,17 +19,17 @@ This stack addresses those problems:
 
 ## 🏗️ Architecture Breakdown
 
-### 1. Applications (`producer` and `consumer`)
+### 1. Applications (Ktor, Gin, Spring Boot pairs)
 
 - **Purpose:** business logic only.
-- `producer` exposes `POST /publish` and emits `OrderCreatedV1`.
-- `consumer` exposes `GET /dapr/subscribe` and receives events on `/orders`.
+- `producer-ktor`, `producer-gin`, and `producer-springboot` expose `POST /publish` and emit `OrderCreatedV1`.
+- `consumer-ktor`, `consumer-gin`, and `consumer-springboot` expose `GET /dapr/subscribe` and receive events on `/orders`.
 
 ### 2. Dapr (Distributed Application Runtime)
 
 - **Purpose:** sidecar abstraction for pub/sub.
-- `producer` sends a publish call to Dapr, Dapr maps it to the configured component.
-- `consumer` declares subscriptions via `/dapr/subscribe`; Dapr pushes matching messages to the route.
+- Producer apps send publish calls to Dapr, and Dapr maps them to the configured component.
+- Consumer apps declare subscriptions via `/dapr/subscribe`; Dapr pushes matching messages to each route.
 
 ### 3. Crossplane
 
@@ -93,7 +93,30 @@ This stack addresses those problems:
 - `kubectl`
 - `helm`
 - Dapr CLI (`dapr`)
-- Java 21 (for local Gradle execution)
+- Java 21 (for local Gradle execution and Spring Boot services)
+- Go 1.23+ (if you want to run Gin services outside Docker)
+
+### Service matrix
+
+- `producer-ktor` / `consumer-ktor`: Kotlin + Ktor (fully integrated with current Gradle test pyramid and Pact setup)
+- `producer-gin` / `consumer-gin`: Go + Gin
+- `producer-springboot` / `consumer-springboot`: Java + Spring Boot (built with the same root `./gradlew` wrapper)
+
+### Shared code strategy
+
+- `common-ktor` contains Kotlin-only shared code (event models, serialization helpers, OTel factory) used by Ktor modules.
+- Best-practice for cross-language sharing is to keep contracts language-neutral (for example AsyncAPI/JSON Schema/Proto in a dedicated `contracts/` folder) instead of sharing runtime libraries across stacks.
+
+### Automation layout by stack
+
+- JVM/Kotlin and Spring Boot test orchestration is implemented as Gradle tasks (`./gradlew ...`).
+- Gin test orchestration is isolated under `scripts/gin/`:
+  - `scripts/gin/run-suite.sh`
+  - `scripts/gin/collect-test-pyramid.sh`
+  - `scripts/gin/ensure-pact-cli.sh`
+  - `scripts/gin/README.md` documents ownership and placement rules for Gin tooling.
+- `scripts/test-pyramid-targets.sh` is the single source of truth for pyramid stack/service targets consumed by Makefile, CI, and push scripts.
+- Cross-stack orchestration stays at root-level scripts (for example `scripts/smoke-test-all.sh`, `scripts/push-test-pyramid-metrics.sh`).
 
 ### 1. Discover available commands
 
@@ -121,10 +144,22 @@ Optional namespace override:
 APP_NAMESPACE=agnostic-local make deploy-local
 ```
 
-### 3. Expose producer and Grafana locally
+### 3. Expose all services and Grafana locally
 
 ```bash
 make port-forward-local
+```
+
+This exposes all app services simultaneously with different local ports:
+
+```bash
+producer-ktor       -> http://localhost:8080
+consumer-ktor       -> http://localhost:8081
+producer-gin        -> http://localhost:8082
+consumer-gin        -> http://localhost:8083
+producer-springboot -> http://localhost:8084
+consumer-springboot -> http://localhost:8085
+grafana             -> http://localhost:3000
 ```
 
 Or deploy and port-forward in one step:
@@ -135,10 +170,12 @@ Or deploy and port-forward in one step:
 
 ### 4. Drive traffic and verify event flow
 
-Open one terminal and follow consumer logs:
+Open one terminal and follow consumer logs (example for all three consumers):
 
 ```bash
-kubectl logs -f -l app=consumer -c consumer
+kubectl logs -f -l app=consumer-ktor -c consumer-ktor
+kubectl logs -f -l app=consumer-gin -c consumer-gin
+kubectl logs -f -l app=consumer-springboot -c consumer-springboot
 ```
 
 In another terminal:
@@ -146,6 +183,8 @@ In another terminal:
 ```bash
 make smoke-test
 ```
+
+`make smoke-test` runs burst traffic against all three producers (`producer-ktor`, `producer-gin`, `producer-springboot`). If the producer endpoints are not already exposed on localhost, it opens temporary port-forwards automatically.
 
 ### 5. Open Grafana and inspect metrics/traces
 
@@ -156,12 +195,13 @@ make smoke-test
   - `Crossplane Dapr - Event Flow`
   - `Crossplane Dapr - Golden Signals`
   - `Crossplane Dapr - Test Pyramid`
+- Service dashboards include a `Service` variable at the top, so you can filter dynamically by jobs such as `producer-ktor`, `consumer-ktor`, `producer-gin`, `consumer-gin`, `producer-springboot`, and `consumer-springboot`.
 
 To find traces in Tempo:
 
 1. Open Grafana `Explore`.
 2. Select `Tempo` datasource.
-3. Query `{ resource.service.name="producer" }` or `{ resource.service.name="consumer" }`.
+3. Query `{ resource.service.name="producer-ktor" }` or `{ resource.service.name="consumer-ktor" }` (Ktor traces are enabled by default).
 4. If empty, generate traffic with `make smoke-test` and query last 30 minutes.
 
 ### 6. Teardown
@@ -219,16 +259,16 @@ Optional full cleanup (remove control planes too):
 
 ### 🧩 Application Deployment Files
 
-- **`infra/base/apps/producer.yaml`**
-  Producer deployment/service with Dapr sidecar annotations, OTEL env vars, probes, security context, and resource limits.
+- **`infra/base/apps/producer-ktor.yaml`**, **`infra/base/apps/producer-gin.yaml`**, **`infra/base/apps/producer-springboot.yaml`**
+  Producer deployments/services for each stack with Dapr sidecar annotations, OTEL env vars, probes, security context, and resource limits.
 
-- **`infra/base/apps/consumer.yaml`**
-  Consumer deployment/service with Dapr annotations and subscription route config through app env vars.
+- **`infra/base/apps/consumer-ktor.yaml`**, **`infra/base/apps/consumer-gin.yaml`**, **`infra/base/apps/consumer-springboot.yaml`**
+  Consumer deployments/services with Dapr annotations and subscription route config through app env vars.
 
-- **`producer/src/main/kotlin/com/agnostic/producer/routes/ProducerRoutes.kt`**
+- **`producer-ktor/src/main/kotlin/com/agnostic/producer/routes/ProducerRoutes.kt`**
   `POST /publish` endpoint, request validation, and publish path instrumentation/logging.
 
-- **`consumer/src/main/kotlin/com/agnostic/consumer/routes/ConsumerRoutes.kt`**
+- **`consumer-ktor/src/main/kotlin/com/agnostic/consumer/routes/ConsumerRoutes.kt`**
   `GET /dapr/subscribe` and `POST /orders` handlers with parsing, processing, metrics, and logs.
 
 ### 📈 Observability Files
@@ -240,7 +280,7 @@ Optional full cleanup (remove control planes too):
   Tempo local storage and OTLP receiver config.
 
 - **`infra/base/observability/prometheus-config.yaml`**
-  Scrape jobs for `otel-collector`, `producer`, `consumer`, and `pushgateway` (for test metrics).
+  Scrape jobs for `otel-collector`, all producer/consumer implementations, and `pushgateway` (for test metrics).
 
 - **`infra/base/observability/pushgateway.yaml`**
   Pushgateway deployment/service used to ingest both latest-run and historical test-pyramid metrics from local and CI.
@@ -253,14 +293,23 @@ Optional full cleanup (remove control planes too):
 
 ### 🤝 Contract Testing (Pact)
 
-- **`consumer/src/contractTest/kotlin/com/agnostic/consumer/contract/ConsumerPactContractTest.kt`**
+- **`consumer-ktor/src/contractTest/kotlin/com/agnostic/consumer/contract/ConsumerPactContractTest.kt`**
   Consumer test defines expected async message contract and generates pact file.
 
-- **`consumer/pacts/order-event-consumer-order-event-producer.json`**
+- **`consumer-ktor/pacts/order-event-consumer-order-event-producer.json`**
   Generated pact artifact, committed to source control.
 
-- **`producer/src/contractTest/kotlin/com/agnostic/producer/contract/ProducerPactVerificationTest.kt`**
-  Provider verification test loads pact from `../consumer/pacts` and validates produced message contract.
+- **`producer-ktor/src/contractTest/kotlin/com/agnostic/producer/contract/ProducerPactVerificationTest.kt`**
+  Provider verification test loads pact from `../consumer-ktor/pacts` and validates produced message contract.
+
+- **`consumer-springboot/src/contractTest/java/com/agnostic/consumerspringboot/ConsumerPactContractTest.java`**
+  Pact JVM consumer test generates message contract for the Spring Boot pair.
+
+- **`producer-springboot/src/contractTest/java/com/agnostic/producerspringboot/ProducerPactVerificationTest.java`**
+  Pact JVM provider verification loads pacts from `../consumer-springboot/pacts`.
+
+- **`consumer-gin/internal/consumer/contract_test.go`** and **`producer-gin/internal/producer/contract_test.go`**
+  Pact-Go consumer/provider verification for the Gin pair, with automatic Pact CLI bootstrap via `scripts/gin/ensure-pact-cli.sh`.
 
 ---
 
@@ -293,15 +342,35 @@ Publish test metrics to Grafana:
 make push-test-pyramid-metrics
 ```
 
-`make push-test-pyramid-metrics` waits for Pushgateway, opens a temporary port-forward, runs unit/integration/contract suites, and aggregates JUnit XML into:
-- `build/reports/test-pyramid/summary.json`
-- `build/reports/test-pyramid/test-pyramid.prom`
+`make push-test-pyramid-metrics` waits for Pushgateway, opens a temporary port-forward, runs unit/integration/contract suites, and generates segregated reports by stack and by service:
+- `build/reports/test-pyramid/ktor/summary.json`
+- `build/reports/test-pyramid/ktor/test-pyramid.prom`
+- `build/reports/test-pyramid/springboot/summary.json`
+- `build/reports/test-pyramid/springboot/test-pyramid.prom`
+- `build/reports/test-pyramid/gin/summary.json`
+- `build/reports/test-pyramid/gin/test-pyramid.prom`
+- `build/reports/test-pyramid/producer-ktor/summary.json`
+- `build/reports/test-pyramid/producer-ktor/test-pyramid.prom`
+- `build/reports/test-pyramid/consumer-ktor/summary.json`
+- `build/reports/test-pyramid/consumer-ktor/test-pyramid.prom`
+- `build/reports/test-pyramid/producer-springboot/summary.json`
+- `build/reports/test-pyramid/producer-springboot/test-pyramid.prom`
+- `build/reports/test-pyramid/consumer-springboot/summary.json`
+- `build/reports/test-pyramid/consumer-springboot/test-pyramid.prom`
+- `build/reports/test-pyramid/producer-gin/summary.json`
+- `build/reports/test-pyramid/producer-gin/test-pyramid.prom`
+- `build/reports/test-pyramid/consumer-gin/summary.json`
+- `build/reports/test-pyramid/consumer-gin/test-pyramid.prom`
 
-Then it pushes those metrics to Pushgateway as:
-- `job="test-pyramid-latest", instance="latest"` for current status panels/gates and trend-over-time history.
-- Optional per-run snapshots (`PUSH_HISTORY=true`) to `job="test-pyramid-history", instance="<run-id>"`.
+Then it pushes those metrics to Pushgateway with segregated jobs:
+- `job="test-pyramid-latest-ktor", instance="latest"`
+- `job="test-pyramid-latest-springboot", instance="latest"`
+- `job="test-pyramid-latest-gin", instance="latest"`
+- `job="test-pyramid-latest-producer-ktor|consumer-ktor|producer-springboot|consumer-springboot|producer-gin|consumer-gin", instance="latest"`
+- Optional per-run snapshots (`PUSH_HISTORY=true`) are pushed to `test-pyramid-history-<target>` with `instance="<run-id>"`.
 
 The `Crossplane Dapr - Test Pyramid` dashboard shows:
+- A required single `Service` selector (no `All` option), so each service pyramid is visualized independently (for example `producer-gin` or `consumer-ktor`).
 - Absolute test count by kind.
 - Percentage split by kind.
 - Absolute and percentage execution time by kind.
@@ -310,7 +379,7 @@ The `Crossplane Dapr - Test Pyramid` dashboard shows:
   - Pyramid ratio: `unit > (integration + contract) > e2e`
   - Total execution time: `< 15 minutes`
   - Overall gate: ratio and time gate combined
-- Time-series trends over time (stacked by test kind) for test count and execution time.
+- Time-series trends over time (stacked by test kind) for test count and execution time for the selected service.
 
 History snapshot mode:
 
@@ -318,7 +387,7 @@ History snapshot mode:
 make push-test-pyramid-history
 ```
 
-- This pushes an additional per-run snapshot (`job="test-pyramid-history", instance="<run-id>"`).
+- This pushes additional per-run snapshots for all stacks and services (`job="test-pyramid-history-<target>", instance="<run-id>"`).
 - Optional custom run id:
 
 ```bash
@@ -327,8 +396,9 @@ RUN_ID=my-release-2026-02-20 make push-test-pyramid-history
 
 CI publishing:
 
-- In GitHub Actions, set repository secret `PUSHGATEWAY_URL` to enable publishing test-pyramid metrics from `.github/workflows/ci.yml`.
-- CI publishes latest metrics only (best-practice low-cardinality mode).
+- In GitHub Actions, set repository secret `PUSHGATEWAY_URL` to enable publishing stack and service test-pyramid metrics from `.github/workflows/crossplane-dapr.yml`.
+- CI publishes latest metrics only (`test-pyramid-latest-<stack-or-service>`).
+- GitHub Actions step summary and uploaded artifacts are split into two sections: by stack and by service.
 - If the secret is not set, CI still runs all tests, but metrics are not pushed.
 
 Pact workflow:
@@ -338,8 +408,12 @@ make pact-regenerate
 ```
 
 `pact-regenerate` executes provider contract verification and re-runs consumer pact generation as a dependency, keeping producer validation tied to the latest generated contract.
+It validates CDC independently per pair:
+- `consumer-ktor` -> `producer-ktor` (`consumer-ktor/pacts/*.json`)
+- `consumer-springboot` -> `producer-springboot` (`consumer-springboot/pacts/*.json`)
+- `consumer-gin` -> `producer-gin` (`consumer-gin/pacts/*.json`)
 
-CI pipeline is in **`.github/workflows/ci.yml`**, enforcing Shift-Left gates (unit, static checks, integration, contract, coverage) with E2E smoke only on manual dispatch.
+CI pipeline is in **`.github/workflows/crossplane-dapr.yml`**, enforcing Shift-Left gates (unit, static checks, integration, contract, coverage) with E2E smoke only on manual dispatch.
 
 ---
 
@@ -349,7 +423,7 @@ The application code remains unchanged. Migration is mostly manifest and secret 
 
 ### 1. Application code
 
-- **No changes required** in `producer`, `consumer`, or shared contracts.
+- **No changes required** in service implementations (`producer-*`, `consumer-*`) or shared contracts.
 
 ### 2. Crossplane configuration
 
@@ -413,7 +487,7 @@ For a healthy local run:
 1. `make deploy-local`
 2. `make port-forward-local`
 3. `make smoke-test`
-4. Check consumer logs for `Consumed order event`
+4. Check consumer logs (for example `consumer-ktor`) for `Consumed order event`
 5. `make push-test-pyramid-metrics`
 6. Open Grafana at `http://localhost:3000` and inspect Golden Signals + Tempo traces + Test Pyramid
 7. `./teardown.sh` when done

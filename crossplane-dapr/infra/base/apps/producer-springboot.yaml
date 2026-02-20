@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer-springboot
+  labels:
+    app: producer-springboot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: producer-springboot
+  template:
+    metadata:
+      labels:
+        app: producer-springboot
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "producer-springboot"
+        dapr.io/app-port: "8080"
+        dapr.io/config: "appconfig"
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: producer-springboot
+          image: agnostic-producer-springboot:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: DAPR_PUBSUB_NAME
+              value: order-pubsub
+            - name: DAPR_TOPIC_NAME
+              value: orders
+            - name: OTEL_SERVICE_NAME
+              value: producer-springboot
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.$(POD_NAMESPACE).svc.cluster.local:4317
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: grpc
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: deployment.environment=local,service.namespace=agnostic
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /health/liveness
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - mountPath: /tmp
+              name: temp
+      volumes:
+        - name: temp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: producer-springboot
+  labels:
+    app: producer-springboot
+spec:
+  selector:
+    app: producer-springboot
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

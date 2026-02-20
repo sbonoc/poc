@@ -14,11 +14,23 @@ patches:
   - path: grafana-security-patch.yaml
 
 images:
-  - name: agnostic-producer
-    newName: ghcr.io/your-org/agnostic-producer
+  - name: agnostic-producer-ktor
+    newName: ghcr.io/your-org/agnostic-producer-ktor
     newTag: latest
-  - name: agnostic-consumer
-    newName: ghcr.io/your-org/agnostic-consumer
+  - name: agnostic-consumer-ktor
+    newName: ghcr.io/your-org/agnostic-consumer-ktor
+    newTag: latest
+  - name: agnostic-producer-gin
+    newName: ghcr.io/your-org/agnostic-producer-gin
+    newTag: latest
+  - name: agnostic-consumer-gin
+    newName: ghcr.io/your-org/agnostic-consumer-gin
+    newTag: latest
+  - name: agnostic-producer-springboot
+    newName: ghcr.io/your-org/agnostic-producer-springboot
+    newTag: latest
+  - name: agnostic-consumer-springboot
+    newName: ghcr.io/your-org/agnostic-consumer-springboot
     newTag: latest
 
 labels:

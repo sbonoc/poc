@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: producer
+  name: producer-ktor
 spec:
   template:
     spec:
       containers:
-        - name: producer
+        - name: producer-ktor
           imagePullPolicy: Always
           env:
             - name: OTEL_RESOURCE_ATTRIBUTES
@@ -15,12 +15,68 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: consumer
+  name: consumer-ktor
 spec:
   template:
     spec:
       containers:
-        - name: consumer
+        - name: consumer-ktor
+          imagePullPolicy: Always
+          env:
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: deployment.environment=prod,service.namespace=agnostic
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer-gin
+spec:
+  template:
+    spec:
+      containers:
+        - name: producer-gin
+          imagePullPolicy: Always
+          env:
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: deployment.environment=prod,service.namespace=agnostic
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer-gin
+spec:
+  template:
+    spec:
+      containers:
+        - name: consumer-gin
+          imagePullPolicy: Always
+          env:
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: deployment.environment=prod,service.namespace=agnostic
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer-springboot
+spec:
+  template:
+    spec:
+      containers:
+        - name: producer-springboot
+          imagePullPolicy: Always
+          env:
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: deployment.environment=prod,service.namespace=agnostic
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer-springboot
+spec:
+  template:
+    spec:
+      containers:
+        - name: consumer-springboot
           imagePullPolicy: Always
           env:
             - name: OTEL_RESOURCE_ATTRIBUTES

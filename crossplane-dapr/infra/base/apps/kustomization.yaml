@@ -1,3 +1,7 @@
 resources:
-  - producer.yaml
-  - consumer.yaml
+  - producer-ktor.yaml
+  - consumer-ktor.yaml
+  - producer-gin.yaml
+  - consumer-gin.yaml
+  - producer-springboot.yaml
+  - consumer-springboot.yaml
