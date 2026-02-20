@@ -20,9 +20,12 @@ object OpenTelemetryFactory {
     private const val OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
     private val logger = System.getLogger(OpenTelemetryFactory::class.java.name)
 
-    fun create(serviceName: String): OpenTelemetry {
-        val otlpEndpoint = System.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") ?: DEFAULT_OTLP_ENDPOINT
-        val otlpProtocol = System.getenv("OTEL_EXPORTER_OTLP_PROTOCOL") ?: DEFAULT_OTLP_PROTOCOL
+    fun create(
+        serviceName: String,
+        getEnv: (String) -> String? = System::getenv,
+    ): OpenTelemetry {
+        val otlpEndpoint = getEnv("OTEL_EXPORTER_OTLP_ENDPOINT") ?: DEFAULT_OTLP_ENDPOINT
+        val otlpProtocol = getEnv("OTEL_EXPORTER_OTLP_PROTOCOL") ?: DEFAULT_OTLP_PROTOCOL
         val normalizedProtocol = otlpProtocol.lowercase()
 
         if (normalizedProtocol != "grpc" && normalizedProtocol != "http/protobuf") {
@@ -32,7 +35,7 @@ object OpenTelemetryFactory {
             )
         }
 
-        val resource = createResource(serviceName)
+        val resource = createResource(serviceName, getEnv)
 
         val spanExporter =
             if (normalizedProtocol == "http/protobuf") {
@@ -63,11 +66,14 @@ object OpenTelemetryFactory {
             .build()
     }
 
-    private fun createResource(serviceName: String): Resource {
+    internal fun createResource(
+        serviceName: String,
+        getEnv: (String) -> String?,
+    ): Resource {
         val attributesBuilder = Attributes.builder()
         attributesBuilder.put(AttributeKey.stringKey("service.name"), serviceName)
 
-        System.getenv(OTEL_RESOURCE_ATTRIBUTES)
+        getEnv(OTEL_RESOURCE_ATTRIBUTES)
             ?.split(",")
             ?.mapNotNull { token ->
                 val parts = token.split("=", limit = 2)
