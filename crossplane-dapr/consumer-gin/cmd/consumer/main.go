@@ -9,6 +9,7 @@ import (
 
 func main() {
 	cfg := consumer.LoadConfigFromEnv()
+	slog.SetDefault(consumer.Logger())
 	router := consumer.NewRouter(cfg, prometheus.DefaultRegisterer, prometheus.DefaultGatherer)
 
 	slog.Info("starting consumer-gin",
