@@ -14,6 +14,8 @@ on:
 jobs:
   shift-left:
     runs-on: ubuntu-latest
+    env:
+      PUSHGATEWAY_URL: ${{ secrets.PUSHGATEWAY_URL }}
     defaults:
       run:
         working-directory: crossplane-dapr
@@ -50,13 +52,49 @@ jobs:
       - name: Build test pyramid metrics file
         run: ./gradlew collectTestPyramidMetrics
 
+      - name: Test pyramid summary (GitHub UI)
+        if: ${{ always() }}
+        run: |
+          SUMMARY_FILE="build/reports/test-pyramid/summary.json"
+
+          {
+            echo "## Crossplane Dapr Test Pyramid"
+            echo ""
+            if [[ ! -f "$SUMMARY_FILE" ]]; then
+              echo "No summary file found."
+              exit 0
+            fi
+
+            total_tests=$(jq -r '.totals.tests' "$SUMMARY_FILE")
+            total_duration=$(jq -r '.totals.durationSeconds' "$SUMMARY_FILE")
+            generated_at=$(jq -r '.generatedAt' "$SUMMARY_FILE")
+
+            echo "- Generated at: \`$generated_at\`"
+            echo "- Total tests: **$total_tests**"
+            echo "- Total duration: **${total_duration}s**"
+            echo ""
+            echo "| Suite | Tests | Failures | Skipped | Duration (s) | Tests % | Duration % |"
+            echo "|---|---:|---:|---:|---:|---:|---:|"
+            jq -r '.suites[] | "| \(.kind) | \(.tests) | \(.failures) | \(.skipped) | \(.durationSeconds) | \(.testsPercentage) | \(.durationPercentage) |"' "$SUMMARY_FILE"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Publish test pyramid metrics
         if: ${{ env.PUSHGATEWAY_URL != '' }}
         env:
-          PUSHGATEWAY_URL: ${{ env.PUSHGATEWAY_URL }}
           PUSH_HISTORY: "false"
           SKIP_TEST_EXECUTION: "true"
         run: ./scripts/push-test-pyramid-metrics.sh "$PUSHGATEWAY_URL" "test-pyramid-latest" "latest"
+
+      - name: Upload pyramid reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: crossplane-dapr-test-pyramid-${{ github.run_id }}
+          path: |
+            crossplane-dapr/build/reports/test-pyramid/summary.json
+            crossplane-dapr/build/reports/test-pyramid/test-pyramid.prom
+            crossplane-dapr/**/build/test-results/**/TEST-*.xml
+          if-no-files-found: warn
 
   e2e-smoke:
     if: github.event_name == 'workflow_dispatch'
