@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 
 	"github.com/agnostic/crossplane-dapr/consumer-gin/internal/consumer"
 	"github.com/prometheus/client_golang/prometheus"
@@ -11,8 +11,15 @@ func main() {
 	cfg := consumer.LoadConfigFromEnv()
 	router := consumer.NewRouter(cfg, prometheus.DefaultRegisterer, prometheus.DefaultGatherer)
 
-	log.Printf("starting consumer-gin on :%s pubsub=%s topic=%s route=%s", cfg.Port, cfg.PubSubName, cfg.TopicName, cfg.SubscriptionRoute)
+	slog.Info("starting consumer-gin",
+		"port", cfg.Port,
+		"pubsub", cfg.PubSubName,
+		"topic", cfg.TopicName,
+		"route", cfg.SubscriptionRoute,
+	)
 	if err := router.Run(":" + cfg.Port); err != nil {
-		log.Fatalf("consumer-gin stopped with error: %v", err)
+		slog.Error("consumer-gin stopped with error", "error", err)
+		return
 	}
+	slog.Info("consumer-gin stopped")
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -15,8 +15,15 @@ func main() {
 	service := producer.NewService(client, cfg.PublishURL())
 	router := producer.NewRouter(cfg, service, prometheus.DefaultRegisterer, prometheus.DefaultGatherer)
 
-	log.Printf("starting producer-gin on :%s pubsub=%s topic=%s", cfg.Port, cfg.PubSubName, cfg.TopicName)
+	slog.Info("starting producer-gin",
+		"port", cfg.Port,
+		"pubsub", cfg.PubSubName,
+		"topic", cfg.TopicName,
+		"daprHttpPort", cfg.DaprHTTPPort,
+	)
 	if err := router.Run(":" + cfg.Port); err != nil {
-		log.Fatalf("producer-gin stopped with error: %v", err)
+		slog.Error("producer-gin stopped with error", "error", err)
+		return
 	}
+	slog.Info("producer-gin stopped")
 }

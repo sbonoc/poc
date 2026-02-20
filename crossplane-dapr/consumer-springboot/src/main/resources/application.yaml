@@ -19,3 +19,7 @@ app:
     pubsub-name: ${DAPR_PUBSUB_NAME:order-pubsub}
     topic-name: ${DAPR_TOPIC_NAME:orders}
     route: ${DAPR_SUBSCRIPTION_ROUTE:/orders}
+
+logging:
+  level:
+    com.agnostic: ${LOG_LEVEL:INFO}

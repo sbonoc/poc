@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -73,15 +72,22 @@ func NewRouter(cfg Config, registerer prometheus.Registerer, gatherer prometheus
 			Topic:      cfg.TopicName,
 			Route:      cfg.SubscriptionRoute,
 		}}
+		logger.Debug("returning dapr subscriptions",
+			"route", cfg.SubscriptionRoute,
+			"pubsub", cfg.PubSubName,
+			"topic", cfg.TopicName,
+		)
 		c.JSON(http.StatusOK, subscriptions)
 	})
 
 	router.POST(cfg.SubscriptionRoute, func(c *gin.Context) {
 		consumedRequests.Inc()
+		logger.Debug("received consume request", "route", cfg.SubscriptionRoute)
 
 		payload, err := c.GetRawData()
 		if err != nil {
 			consumeErrors.Inc()
+			logger.Warn("failed to read event payload", "error", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "failed to read event payload"})
 			return
 		}
@@ -89,13 +95,13 @@ func NewRouter(cfg Config, registerer prometheus.Registerer, gatherer prometheus
 		event, err := ParseOrderEvent(payload)
 		if err != nil {
 			consumeErrors.Inc()
-			log.Printf("failed to parse event payload err=%v", err)
+			logger.Warn("failed to parse event payload", "route", cfg.SubscriptionRoute, "payloadSize", len(payload), "error", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid event payload"})
 			return
 		}
 
 		consumedEvents.Inc()
-		log.Printf("consumed order event route=%s id=%s version=%s", cfg.SubscriptionRoute, event.ID, event.EventVersion)
+		logger.Info("consumed order event", "route", cfg.SubscriptionRoute, "id", event.ID, "version", event.EventVersion)
 		c.Status(http.StatusOK)
 	})
 

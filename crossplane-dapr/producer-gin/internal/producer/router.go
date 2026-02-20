@@ -1,7 +1,6 @@
 package producer
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -69,28 +68,31 @@ func NewRouter(cfg Config, service *Service, registerer prometheus.Registerer, g
 
 	router.POST("/publish", func(c *gin.Context) {
 		publishRequests.Inc()
+		logger.Debug("received publish request")
 
 		var req PublishOrderRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			publishErrors.Inc()
+			logger.Warn("invalid publish request payload", "error", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
 			return
 		}
 		if err := req.Validate(); err != nil {
 			publishErrors.Inc()
+			logger.Warn("publish validation failed", "orderId", req.ID, "error", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		if err := service.Publish(c.Request.Context(), req); err != nil {
 			publishErrors.Inc()
-			log.Printf("publish failed orderId=%s err=%v", req.ID, err)
+			logger.Error("publish failed", "orderId", req.ID, "error", err)
 			c.JSON(http.StatusBadGateway, gin.H{"error": "failed to publish event"})
 			return
 		}
 
 		publishedEvents.Inc()
-		log.Printf("published order event id=%s version=v1 pubsub=%s topic=%s", req.ID, cfg.PubSubName, cfg.TopicName)
+		logger.Info("published order event", "id", req.ID, "version", "v1", "pubsub", cfg.PubSubName, "topic", cfg.TopicName)
 		c.JSON(http.StatusAccepted, gin.H{"status": "accepted", "orderId": req.ID})
 	})
 
