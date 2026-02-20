@@ -46,7 +46,7 @@ curl -fsS --data-binary @"${METRICS_FILE}" \
 if [[ "${PUSH_HISTORY}" == "true" ]]; then
   default_run_id="$(date -u +%Y%m%dT%H%M%SZ)"
   raw_run_id="${RUN_ID:-${default_run_id}}"
-  history_instance="$(echo "${raw_run_id}" | tr -cs '[:alnum:]_.-' '-')"
+  history_instance="$(echo "${raw_run_id}" | tr -cs '[:alnum:]_.-' '-' | sed -E 's/^-+//; s/-+$//; s/-+/-/g')"
   curl -fsS --data-binary @"${METRICS_FILE}" \
     "${PUSHGATEWAY_URL%/}/metrics/job/${HISTORY_JOB}/instance/${history_instance}"
 fi
