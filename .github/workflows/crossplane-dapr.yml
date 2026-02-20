@@ -51,9 +51,9 @@ jobs:
         run: ./gradlew collectTestPyramidMetrics
 
       - name: Publish test pyramid metrics
-        if: ${{ secrets.PUSHGATEWAY_URL != '' }}
+        if: ${{ env.PUSHGATEWAY_URL != '' }}
         env:
-          PUSHGATEWAY_URL: ${{ secrets.PUSHGATEWAY_URL }}
+          PUSHGATEWAY_URL: ${{ env.PUSHGATEWAY_URL }}
           PUSH_HISTORY: "false"
           SKIP_TEST_EXECUTION: "true"
         run: ./scripts/push-test-pyramid-metrics.sh "$PUSHGATEWAY_URL" "test-pyramid-latest" "latest"
