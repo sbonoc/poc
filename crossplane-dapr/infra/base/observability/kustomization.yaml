@@ -5,6 +5,7 @@ resources:
   - tempo.yaml
   - prometheus-config.yaml
   - prometheus.yaml
+  - pushgateway.yaml
   - grafana-datasources.yaml
   - grafana-dashboard-provider.yaml
   - grafana-dashboards.yaml

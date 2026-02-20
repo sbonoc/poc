@@ -155,6 +155,7 @@ make smoke-test
   - `Crossplane Dapr - Service Overview`
   - `Crossplane Dapr - Event Flow`
   - `Crossplane Dapr - Golden Signals`
+  - `Crossplane Dapr - Test Pyramid`
 
 To find traces in Tempo:
 
@@ -239,7 +240,10 @@ Optional full cleanup (remove control planes too):
   Tempo local storage and OTLP receiver config.
 
 - **`infra/base/observability/prometheus-config.yaml`**
-  Scrape jobs for `otel-collector`, `producer`, and `consumer`.
+  Scrape jobs for `otel-collector`, `producer`, `consumer`, and `pushgateway` (for test metrics).
+
+- **`infra/base/observability/pushgateway.yaml`**
+  Pushgateway deployment/service used to ingest both latest-run and historical test-pyramid metrics from local and CI.
 
 - **`infra/base/observability/grafana-datasources.yaml`**
   Provisioned datasources for Prometheus and Tempo.
@@ -276,9 +280,56 @@ make unit-test
 make integration-test
 make contract-test
 make e2e-test
+make test-pyramid-metrics
+make push-test-pyramid-metrics
+make push-test-pyramid-history
 make quality
 make verify
 ```
+
+Publish test metrics to Grafana:
+
+```bash
+make push-test-pyramid-metrics
+```
+
+`make push-test-pyramid-metrics` waits for Pushgateway, opens a temporary port-forward, runs unit/integration/contract suites, and aggregates JUnit XML into:
+- `build/reports/test-pyramid/summary.json`
+- `build/reports/test-pyramid/test-pyramid.prom`
+
+Then it pushes those metrics to Pushgateway as:
+- `job="test-pyramid-latest", instance="latest"` for current status panels/gates and trend-over-time history.
+- Optional per-run snapshots (`PUSH_HISTORY=true`) to `job="test-pyramid-history", instance="<run-id>"`.
+
+The `Crossplane Dapr - Test Pyramid` dashboard shows:
+- Absolute test count by kind.
+- Percentage split by kind.
+- Absolute and percentage execution time by kind.
+- Total test count and total execution time.
+- Quality gates (green/red):
+  - Pyramid ratio: `unit > (integration + contract) > e2e`
+  - Total execution time: `< 15 minutes`
+  - Overall gate: ratio and time gate combined
+- Time-series trends over time (stacked by test kind) for test count and execution time.
+
+History snapshot mode:
+
+```bash
+make push-test-pyramid-history
+```
+
+- This pushes an additional per-run snapshot (`job="test-pyramid-history", instance="<run-id>"`).
+- Optional custom run id:
+
+```bash
+RUN_ID=my-release-2026-02-20 make push-test-pyramid-history
+```
+
+CI publishing:
+
+- In GitHub Actions, set repository secret `PUSHGATEWAY_URL` to enable publishing test-pyramid metrics from `.github/workflows/ci.yml`.
+- CI publishes latest metrics only (best-practice low-cardinality mode).
+- If the secret is not set, CI still runs all tests, but metrics are not pushed.
 
 Pact workflow:
 
@@ -363,5 +414,6 @@ For a healthy local run:
 2. `make port-forward-local`
 3. `make smoke-test`
 4. Check consumer logs for `Consumed order event`
-5. Open Grafana at `http://localhost:3000` and inspect Golden Signals + Tempo traces
-6. `./teardown.sh` when done
+5. `make push-test-pyramid-metrics`
+6. Open Grafana at `http://localhost:3000` and inspect Golden Signals + Tempo traces + Test Pyramid
+7. `./teardown.sh` when done

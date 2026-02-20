@@ -42,6 +42,17 @@ jobs:
       - name: Coverage gate
         run: ./gradlew koverVerify
 
+      - name: Build test pyramid metrics file
+        run: ./gradlew collectTestPyramidMetrics
+
+      - name: Publish test pyramid metrics
+        if: ${{ secrets.PUSHGATEWAY_URL != '' }}
+        env:
+          PUSHGATEWAY_URL: ${{ secrets.PUSHGATEWAY_URL }}
+          PUSH_HISTORY: "false"
+          SKIP_TEST_EXECUTION: "true"
+        run: ./scripts/push-test-pyramid-metrics.sh "$PUSHGATEWAY_URL" "test-pyramid-latest" "latest"
+
   e2e-smoke:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
