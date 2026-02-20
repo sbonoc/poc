@@ -16,6 +16,8 @@ PRODUCER_LOCAL_PORT ?= $(PRODUCER_KTOR_LOCAL_PORT)
 APP_SERVICE_PORT ?= 8080
 GRAFANA_LOCAL_PORT ?= 3000
 GRAFANA_SERVICE_PORT ?= 3000
+LOKI_LOCAL_PORT ?= 3100
+LOKI_SERVICE_PORT ?= 3100
 PUSHGATEWAY_URL ?= http://localhost:9091
 PUSHGATEWAY_JOB_PREFIX ?= test-pyramid-latest
 PUSHGATEWAY_INSTANCE ?= latest
@@ -39,7 +41,7 @@ help:
 	@echo "  help                  Show this help"
 	@echo "  deploy-local          Build images and deploy full local stack"
 	@echo "  wait-local            Wait for app/observability deployments to be available"
-	@echo "  port-forward-local    Port-forward all services and grafana locally"
+	@echo "  port-forward-local    Port-forward all services, Loki, and Grafana locally"
 	@echo "  smoke-test            Run burst publish smoke test on all producers"
 	@echo "  teardown-local        Delete local stack resources"
 	@echo "  destroy-control-planes Remove Dapr/Crossplane control planes"
@@ -58,6 +60,7 @@ help:
 	@echo "  ./teardown.sh --help"
 	@echo "  ./scripts/smoke-test-all.sh --help"
 	@echo "  ./scripts/gin/run-suite.sh --help"
+	@echo "  ./scripts/gin/quality-check.sh --help"
 	@echo "  ./scripts/gin/collect-test-pyramid.sh --help"
 	@echo "  ./scripts/gin/ensure-pact-cli.sh --help"
 	@echo "  ./scripts/test-pyramid-targets.sh --help"
@@ -74,6 +77,7 @@ help:
 	@echo "  PRODUCER_SPRINGBOOT_LOCAL_PORT=$(PRODUCER_SPRINGBOOT_LOCAL_PORT)"
 	@echo "  CONSUMER_SPRINGBOOT_LOCAL_PORT=$(CONSUMER_SPRINGBOOT_LOCAL_PORT)"
 	@echo "  GRAFANA_LOCAL_PORT=$(GRAFANA_LOCAL_PORT)"
+	@echo "  LOKI_LOCAL_PORT=$(LOKI_LOCAL_PORT)"
 	@echo "  PUSHGATEWAY_URL=$(PUSHGATEWAY_URL)"
 	@echo "  PUSHGATEWAY_JOB_PREFIX=$(PUSHGATEWAY_JOB_PREFIX)"
 	@echo "  PUSHGATEWAY_INSTANCE=$(PUSHGATEWAY_INSTANCE)"
@@ -135,13 +139,14 @@ deploy-local: bootstrap-control-planes build-images
 		if [ $$i -eq 36 ]; then echo "Provider API registration timeout" && exit 1; fi; \
 	done
 	kubectl apply -k infra/overlays/local -n $(APP_NAMESPACE)
+	kubectl patch clusterrolebinding promtail --type='json' -p='[{"op":"replace","path":"/subjects/0/namespace","value":"$(APP_NAMESPACE)"}]'
 	@echo "Restarting app deployments to pick up rebuilt :local images"
 	@for deployment in producer-ktor consumer-ktor producer-gin consumer-gin producer-springboot consumer-springboot; do \
 		kubectl -n $(APP_NAMESPACE) rollout restart deployment/$$deployment >/dev/null 2>&1 || true; \
 	done
 	$(MAKE) wait-local
 	@echo "Local deployment is ready in namespace $(APP_NAMESPACE)."
-	@echo "Run 'make port-forward-local' to expose all apps and grafana locally."
+	@echo "Run 'make port-forward-local' to expose all apps, Loki, and Grafana locally."
 
 wait-local:
 	kubectl -n $(NAMESPACE_XP) wait --for=condition=available deployment/gcp-emulator --timeout=180s
@@ -155,6 +160,8 @@ wait-local:
 	kubectl -n $(APP_NAMESPACE) wait --for=condition=available deployment/prometheus --timeout=180s
 	kubectl -n $(APP_NAMESPACE) wait --for=condition=available deployment/pushgateway --timeout=180s
 	kubectl -n $(APP_NAMESPACE) wait --for=condition=available deployment/tempo --timeout=180s
+	kubectl -n $(APP_NAMESPACE) wait --for=condition=available deployment/loki --timeout=180s
+	kubectl -n $(APP_NAMESPACE) rollout status daemonset/promtail --timeout=180s
 	kubectl -n $(APP_NAMESPACE) wait --for=condition=available deployment/grafana --timeout=180s
 
 teardown-local:
@@ -172,6 +179,8 @@ teardown-local:
 	@kubectl -n $(APP_NAMESPACE) wait --for=delete deployment/prometheus --timeout=120s >/dev/null 2>&1 || true
 	@kubectl -n $(APP_NAMESPACE) wait --for=delete deployment/pushgateway --timeout=120s >/dev/null 2>&1 || true
 	@kubectl -n $(APP_NAMESPACE) wait --for=delete deployment/tempo --timeout=120s >/dev/null 2>&1 || true
+	@kubectl -n $(APP_NAMESPACE) wait --for=delete deployment/loki --timeout=120s >/dev/null 2>&1 || true
+	@kubectl -n $(APP_NAMESPACE) wait --for=delete daemonset/promtail --timeout=120s >/dev/null 2>&1 || true
 	@kubectl -n $(APP_NAMESPACE) wait --for=delete deployment/grafana --timeout=120s >/dev/null 2>&1 || true
 
 # Optional heavy cleanup of control planes.
@@ -273,9 +282,13 @@ push-test-pyramid-history: push-test-pyramid-metrics
 
 quality:
 	./gradlew ktlintCheck detekt koverVerify
+	./scripts/gin/quality-check.sh
 
 verify:
 	./gradlew clean check koverVerify
+	./scripts/gin/quality-check.sh
+	./scripts/gin/run-suite.sh integration
+	./scripts/gin/run-suite.sh contract
 
 format:
 	./gradlew ktlintFormat
@@ -294,6 +307,7 @@ port-forward-local:
 	@kubectl -n $(PORT_FORWARD_NAMESPACE) wait --for=condition=available deployment/consumer-gin --timeout=120s
 	@kubectl -n $(PORT_FORWARD_NAMESPACE) wait --for=condition=available deployment/producer-springboot --timeout=120s
 	@kubectl -n $(PORT_FORWARD_NAMESPACE) wait --for=condition=available deployment/consumer-springboot --timeout=120s
+	@kubectl -n $(PORT_FORWARD_NAMESPACE) wait --for=condition=available deployment/loki --timeout=120s
 	@kubectl -n $(PORT_FORWARD_NAMESPACE) wait --for=condition=available deployment/grafana --timeout=120s
 	@mkdir -p build
 	@kubectl -n $(PORT_FORWARD_NAMESPACE) port-forward svc/producer-ktor $(PRODUCER_KTOR_LOCAL_PORT):$(APP_SERVICE_PORT) >build/pf-producer-ktor.log 2>&1 & \
@@ -308,9 +322,11 @@ port-forward-local:
 	producer_springboot_pid=$$!; \
 	kubectl -n $(PORT_FORWARD_NAMESPACE) port-forward svc/consumer-springboot $(CONSUMER_SPRINGBOOT_LOCAL_PORT):$(APP_SERVICE_PORT) >build/pf-consumer-springboot.log 2>&1 & \
 	consumer_springboot_pid=$$!; \
+	kubectl -n $(PORT_FORWARD_NAMESPACE) port-forward svc/loki $(LOKI_LOCAL_PORT):$(LOKI_SERVICE_PORT) >build/pf-loki.log 2>&1 & \
+	loki_pid=$$!; \
 	kubectl -n $(PORT_FORWARD_NAMESPACE) port-forward svc/grafana $(GRAFANA_LOCAL_PORT):$(GRAFANA_SERVICE_PORT) & \
 	grafana_pid=$$!; \
-	trap 'kill $$producer_ktor_pid $$consumer_ktor_pid $$producer_gin_pid $$consumer_gin_pid $$producer_springboot_pid $$consumer_springboot_pid $$grafana_pid >/dev/null 2>&1 || true' INT TERM EXIT; \
+	trap 'kill $$producer_ktor_pid $$consumer_ktor_pid $$producer_gin_pid $$consumer_gin_pid $$producer_springboot_pid $$consumer_springboot_pid $$loki_pid $$grafana_pid >/dev/null 2>&1 || true' INT TERM EXIT; \
 	sleep 1; \
 	if ! kill -0 $$producer_ktor_pid >/dev/null 2>&1; then echo "producer-ktor port-forward failed to start"; exit 1; fi; \
 	if ! kill -0 $$consumer_ktor_pid >/dev/null 2>&1; then echo "consumer-ktor port-forward failed to start"; exit 1; fi; \
@@ -318,6 +334,7 @@ port-forward-local:
 	if ! kill -0 $$consumer_gin_pid >/dev/null 2>&1; then echo "consumer-gin port-forward failed to start"; exit 1; fi; \
 	if ! kill -0 $$producer_springboot_pid >/dev/null 2>&1; then echo "producer-springboot port-forward failed to start"; exit 1; fi; \
 	if ! kill -0 $$consumer_springboot_pid >/dev/null 2>&1; then echo "consumer-springboot port-forward failed to start"; exit 1; fi; \
+	if ! kill -0 $$loki_pid >/dev/null 2>&1; then echo "Loki port-forward failed to start"; exit 1; fi; \
 	if ! kill -0 $$grafana_pid >/dev/null 2>&1; then echo "Grafana port-forward failed to start"; exit 1; fi; \
 	echo "producer-ktor available at http://localhost:$(PRODUCER_KTOR_LOCAL_PORT)"; \
 	echo "consumer-ktor available at http://localhost:$(CONSUMER_KTOR_LOCAL_PORT)"; \
@@ -325,6 +342,7 @@ port-forward-local:
 	echo "consumer-gin available at http://localhost:$(CONSUMER_GIN_LOCAL_PORT)"; \
 	echo "producer-springboot available at http://localhost:$(PRODUCER_SPRINGBOOT_LOCAL_PORT)"; \
 	echo "consumer-springboot available at http://localhost:$(CONSUMER_SPRINGBOOT_LOCAL_PORT)"; \
+	echo "Loki available at http://localhost:$(LOKI_LOCAL_PORT)"; \
 	echo "Grafana available at http://localhost:$(GRAFANA_LOCAL_PORT)"; \
 	echo "Press Ctrl+C to stop all port-forwards"; \
 	wait

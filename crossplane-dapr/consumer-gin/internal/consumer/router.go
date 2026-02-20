@@ -57,6 +57,18 @@ func NewRouter(cfg Config, registerer prometheus.Registerer, gatherer prometheus
 			strconv.Itoa(c.Writer.Status()),
 		).Observe(time.Since(start).Seconds())
 	})
+	router.Use(func(c *gin.Context) {
+		traceID, spanID := requestTraceContext(c.Request)
+		requestLogger := logger.With(
+			"trace_id", traceID,
+			"span_id", spanID,
+			"http_method", c.Request.Method,
+			"http_path", c.Request.URL.Path,
+		)
+		c.Set(requestLoggerKey, requestLogger)
+		c.Request = c.Request.WithContext(withRequestLogger(c.Request.Context(), requestLogger))
+		c.Next()
+	})
 
 	router.GET("/health/live", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "UP"})
@@ -67,12 +79,13 @@ func NewRouter(cfg Config, registerer prometheus.Registerer, gatherer prometheus
 	router.GET("/metrics", gin.WrapH(promhttp.HandlerFor(gatherer, promhttp.HandlerOpts{})))
 
 	router.GET("/dapr/subscribe", func(c *gin.Context) {
+		requestLogger := loggerFromGinContext(c)
 		subscriptions := []DaprSubscription{{
 			PubSubName: cfg.PubSubName,
 			Topic:      cfg.TopicName,
 			Route:      cfg.SubscriptionRoute,
 		}}
-		logger.Debug("returning dapr subscriptions",
+		requestLogger.Debug("returning dapr subscriptions",
 			"route", cfg.SubscriptionRoute,
 			"pubsub", cfg.PubSubName,
 			"topic", cfg.TopicName,
@@ -81,27 +94,28 @@ func NewRouter(cfg Config, registerer prometheus.Registerer, gatherer prometheus
 	})
 
 	router.POST(cfg.SubscriptionRoute, func(c *gin.Context) {
+		requestLogger := loggerFromGinContext(c)
 		consumedRequests.Inc()
-		logger.Debug("received consume request", "route", cfg.SubscriptionRoute)
+		requestLogger.Debug("received consume request", "route", cfg.SubscriptionRoute)
 
 		payload, err := c.GetRawData()
 		if err != nil {
 			consumeErrors.Inc()
-			logger.Warn("failed to read event payload", "error", err)
+			requestLogger.Warn("failed to read event payload", "error", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "failed to read event payload"})
 			return
 		}
 
-		event, err := ParseOrderEvent(payload)
+		event, err := ParseOrderEvent(c.Request.Context(), payload)
 		if err != nil {
 			consumeErrors.Inc()
-			logger.Warn("failed to parse event payload", "route", cfg.SubscriptionRoute, "payloadSize", len(payload), "error", err)
+			requestLogger.Warn("failed to parse event payload", "route", cfg.SubscriptionRoute, "payloadSize", len(payload), "error", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid event payload"})
 			return
 		}
 
 		consumedEvents.Inc()
-		logger.Info("consumed order event", "route", cfg.SubscriptionRoute, "id", event.ID, "version", event.EventVersion)
+		requestLogger.Info("consumed order event", "route", cfg.SubscriptionRoute, "id", event.ID, "version", event.EventVersion)
 		c.Status(http.StatusOK)
 	})
 

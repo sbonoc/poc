@@ -1,7 +1,7 @@
 FROM golang:1.23-alpine AS build
 WORKDIR /src
 
-COPY producer-gin/go.mod ./producer-gin/go.mod
+COPY producer-gin/go.mod producer-gin/go.sum ./producer-gin/
 WORKDIR /src/producer-gin
 RUN go mod download
 
