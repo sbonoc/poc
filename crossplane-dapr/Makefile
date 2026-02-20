@@ -167,7 +167,8 @@ test-pyramid-metrics:
 push-test-pyramid-metrics:
 	@if [[ "$(PUSHGATEWAY_URL)" == http://localhost* || "$(PUSHGATEWAY_URL)" == http://127.0.0.1* ]]; then \
 		kubectl -n $(PORT_FORWARD_NAMESPACE) wait --for=condition=available deployment/pushgateway --timeout=120s; \
-		kubectl -n $(PORT_FORWARD_NAMESPACE) port-forward svc/pushgateway $(PUSHGATEWAY_LOCAL_PORT):9091 >/tmp/pf-pushgateway.log 2>&1 & \
+		mkdir -p build; \
+		kubectl -n $(PORT_FORWARD_NAMESPACE) port-forward svc/pushgateway $(PUSHGATEWAY_LOCAL_PORT):9091 >build/pf-pushgateway.log 2>&1 & \
 		pushgateway_pid=$$!; \
 		trap 'kill $$pushgateway_pid >/dev/null 2>&1 || true' INT TERM EXIT; \
 		sleep 2; \
