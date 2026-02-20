@@ -19,10 +19,9 @@ fun Application.configureProducerRoutes(
 
     routing {
         post("/publish") {
-            requestCounter.increment()
-
             val request = call.receive<PublishOrderRequest>()
             request.validate()
+            requestCounter.increment()
             log.debug("Received publish request orderId={} amount={}", request.id, request.amount)
 
             runCatching {

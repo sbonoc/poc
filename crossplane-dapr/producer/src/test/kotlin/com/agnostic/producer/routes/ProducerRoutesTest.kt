@@ -25,9 +25,9 @@ class ProducerRoutesTest {
                 EventPublisher { event ->
                     publishedEvent = event
                 }
+            val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
             application {
-                val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
                 configureHttpPlugins(JsonSupport.default, registry)
                 configureProducerRoutes(fakePublisher, registry)
             }
@@ -42,15 +42,16 @@ class ProducerRoutesTest {
             assertThat(response.bodyAsText()).contains("accepted")
             assertThat(publishedEvent).isNotNull
             assertThat(publishedEvent?.id).isEqualTo("ORD-100")
+            assertThat(registry.counter("orders.publish.requests").count()).isEqualTo(1.0)
         }
 
     @Test
     fun `publish endpoint rejects invalid payload`() =
         testApplication {
             val fakePublisher = EventPublisher { _ -> }
+            val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
             application {
-                val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
                 configureHttpPlugins(JsonSupport.default, registry)
                 configureProducerRoutes(fakePublisher, registry)
             }
@@ -63,5 +64,6 @@ class ProducerRoutesTest {
 
             assertThat(response.status).isEqualTo(HttpStatusCode.BadRequest)
             assertThat(response.bodyAsText()).contains("amount")
+            assertThat(registry.counter("orders.publish.requests").count()).isEqualTo(0.0)
         }
 }
