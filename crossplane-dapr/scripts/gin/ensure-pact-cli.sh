@@ -74,7 +74,8 @@ install_cli() {
 
   (
     cd "${tmp_dir}"
-    PACT_CLI_VERSION="${PACT_CLI_VERSION}" bash "${installer_file}"
+    # Keep stdout clean for command substitution callers; logs go to stderr.
+    PACT_CLI_VERSION="${PACT_CLI_VERSION}" bash "${installer_file}" 1>&2
   )
 
   rm -rf "${PACT_CLI_DIR}"
