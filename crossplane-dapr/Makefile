@@ -165,7 +165,8 @@ test-pyramid-metrics:
 	./gradlew testPyramidMetrics
 
 push-test-pyramid-metrics:
-	@if [[ "$(PUSHGATEWAY_URL)" == http://localhost* || "$(PUSHGATEWAY_URL)" == http://127.0.0.1* ]]; then \
+	@norm_url=$$(echo "$(PUSHGATEWAY_URL)" | tr '[:upper:]' '[:lower:]'); \
+	if [[ "$$norm_url" == http://localhost* || "$$norm_url" == http://127.0.0.1* ]]; then \
 		kubectl -n $(PORT_FORWARD_NAMESPACE) wait --for=condition=available deployment/pushgateway --timeout=120s; \
 		mkdir -p build; \
 		kubectl -n $(PORT_FORWARD_NAMESPACE) port-forward svc/pushgateway $(PUSHGATEWAY_LOCAL_PORT):9091 >build/pf-pushgateway.log 2>&1 & \
