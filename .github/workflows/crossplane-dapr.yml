@@ -65,9 +65,9 @@ jobs:
               exit 0
             fi
 
-            total_tests=$(jq -r '.totals.tests' "$SUMMARY_FILE")
-            total_duration=$(jq -r '.totals.durationSeconds' "$SUMMARY_FILE")
-            generated_at=$(jq -r '.generatedAt' "$SUMMARY_FILE")
+            total_tests=$(jq -r '(.totals.tests // "N/A") | tostring' "$SUMMARY_FILE")
+            total_duration=$(jq -r '(.totals.durationSeconds // "N/A") | tostring' "$SUMMARY_FILE")
+            generated_at=$(jq -r '.generatedAt // "N/A"' "$SUMMARY_FILE")
 
             echo "- Generated at: \`$generated_at\`"
             echo "- Total tests: **$total_tests**"
@@ -75,7 +75,7 @@ jobs:
             echo ""
             echo "| Suite | Tests | Failures | Skipped | Duration (s) | Tests % | Duration % |"
             echo "|---|---:|---:|---:|---:|---:|---:|"
-            jq -r '.suites[] | "| \(.kind) | \(.tests) | \(.failures) | \(.skipped) | \(.durationSeconds) | \(.testsPercentage) | \(.durationPercentage) |"' "$SUMMARY_FILE"
+            jq -r '(.suites // [])[] | "| \(.kind // "N/A") | \(.tests // "N/A") | \(.failures // "N/A") | \(.skipped // "N/A") | \(.durationSeconds // "N/A") | \(.testsPercentage // "N/A") | \(.durationPercentage // "N/A") |"' "$SUMMARY_FILE"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Publish test pyramid metrics
