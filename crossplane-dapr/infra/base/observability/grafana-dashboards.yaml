@@ -505,7 +505,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "((max(test_pyramid_total_duration_seconds{job=\"test-pyramid-latest\"}) or on() vector(1000000000)) < bool 900)"
+              "expr": "((max(test_pyramid_total_duration_seconds{job=\"test-pyramid-latest\"}) or on() vector(999999)) < bool 900)"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
@@ -544,7 +544,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "((((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"unit\"}) or on() vector(0)) > bool ((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"contract\"}) or on() vector(0)))) * (((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"contract\"}) or on() vector(0))) > bool (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"e2e\"}) or on() vector(0)))) * ((max(test_pyramid_total_duration_seconds{job=\"test-pyramid-latest\"}) or on() vector(1000000000)) < bool 900))"
+              "expr": "((((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"unit\"}) or on() vector(0)) > bool ((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"contract\"}) or on() vector(0)))) * (((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"contract\"}) or on() vector(0))) > bool (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"e2e\"}) or on() vector(0)))) * ((max(test_pyramid_total_duration_seconds{job=\"test-pyramid-latest\"}) or on() vector(999999)) < bool 900))"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
