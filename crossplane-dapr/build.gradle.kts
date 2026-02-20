@@ -108,6 +108,8 @@ abstract class CollectTestPyramidMetricsTask : DefaultTask() {
         val xmlFactory = DocumentBuilderFactory.newInstance().apply {
             isNamespaceAware = false
             setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+            setFeature("http://xml.org/sax/features/external-general-entities", false)
+            setFeature("http://xml.org/sax/features/external-parameter-entities", false)
         }
 
         fun addIntMetric(map: MutableMap<String, Int>, kind: String, value: Int) {
