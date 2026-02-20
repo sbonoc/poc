@@ -22,3 +22,8 @@ data:
         metrics_path: /metrics
         static_configs:
           - targets: ["consumer:8080"]
+
+      - job_name: pushgateway
+        honor_labels: true
+        static_configs:
+          - targets: ["pushgateway:9091"]

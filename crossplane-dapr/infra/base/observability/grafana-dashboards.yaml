@@ -300,3 +300,324 @@ data:
         }
       ]
     }
+  test-pyramid.json: |
+    {
+      "id": null,
+      "uid": "test-pyramid",
+      "title": "Crossplane Dapr - Test Pyramid",
+      "tags": ["crossplane-dapr", "testing", "quality"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Total Tests",
+          "gridPos": {"h": 6, "w": 8, "x": 0, "y": 7},
+          "fieldConfig": {"defaults": {"unit": "none"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max(test_pyramid_total_tests{job=\"test-pyramid-latest\"})"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Total Execution Time",
+          "gridPos": {"h": 6, "w": 8, "x": 8, "y": 7},
+          "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max(test_pyramid_total_duration_seconds{job=\"test-pyramid-latest\"})"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Metrics Age (minutes)",
+          "gridPos": {"h": 6, "w": 8, "x": 16, "y": 7},
+          "fieldConfig": {"defaults": {"unit": "m"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "(time() - max(test_pyramid_last_update_unix_seconds{job=\"test-pyramid-latest\"})) / 60"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 4,
+          "type": "bargauge",
+          "title": "Tests by Type (absolute)",
+          "gridPos": {"h": 10, "w": 8, "x": 0, "y": 13},
+          "fieldConfig": {"defaults": {"unit": "none"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by (kind) (test_pyramid_tests_count{job=\"test-pyramid-latest\"})",
+              "legendFormat": "{{kind}}"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 5,
+          "type": "bargauge",
+          "title": "Tests by Type (%)",
+          "gridPos": {"h": 10, "w": 8, "x": 8, "y": 13},
+          "fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by (kind) (test_pyramid_tests_percentage{job=\"test-pyramid-latest\"})",
+              "legendFormat": "{{kind}}"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 6,
+          "type": "bargauge",
+          "title": "Execution Time by Type (seconds)",
+          "gridPos": {"h": 10, "w": 8, "x": 16, "y": 13},
+          "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by (kind) (test_pyramid_duration_seconds{job=\"test-pyramid-latest\"})",
+              "legendFormat": "{{kind}}"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 7,
+          "type": "bargauge",
+          "title": "Execution Time by Type (%)",
+          "gridPos": {"h": 10, "w": 12, "x": 0, "y": 23},
+          "fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by (kind) (test_pyramid_duration_percentage{job=\"test-pyramid-latest\"})",
+              "legendFormat": "{{kind}}"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 8,
+          "type": "bargauge",
+          "title": "Failures by Type",
+          "gridPos": {"h": 10, "w": 12, "x": 12, "y": 23},
+          "fieldConfig": {"defaults": {"unit": "none"}, "overrides": []},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by (kind) (test_pyramid_failures_count{job=\"test-pyramid-latest\"})",
+              "legendFormat": "{{kind}}"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 9,
+          "type": "stat",
+          "title": "Gate: Pyramid Ratio",
+          "gridPos": {"h": 7, "w": 8, "x": 0, "y": 0},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0,
+              "min": 0,
+              "max": 1,
+              "color": {"mode": "thresholds"},
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {"text": "FAIL"},
+                    "1": {"text": "PASS"}
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "green", "value": 1}
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "(((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"unit\"}) or on() vector(0)) > bool ((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"contract\"}) or on() vector(0)))) * (((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"contract\"}) or on() vector(0))) > bool (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"e2e\"}) or on() vector(0))))"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 10,
+          "type": "stat",
+          "title": "Gate: Total Time < 15m",
+          "gridPos": {"h": 7, "w": 8, "x": 8, "y": 0},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0,
+              "min": 0,
+              "max": 1,
+              "color": {"mode": "thresholds"},
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {"text": "FAIL"},
+                    "1": {"text": "PASS"}
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "green", "value": 1}
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "((max(test_pyramid_total_duration_seconds{job=\"test-pyramid-latest\"}) or on() vector(999999)) < bool 900)"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 11,
+          "type": "stat",
+          "title": "Gate: Overall Quality",
+          "gridPos": {"h": 7, "w": 8, "x": 16, "y": 0},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0,
+              "min": 0,
+              "max": 1,
+              "color": {"mode": "thresholds"},
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {"text": "FAIL"},
+                    "1": {"text": "PASS"}
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "green", "value": 1}
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "((((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"unit\"}) or on() vector(0)) > bool ((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"contract\"}) or on() vector(0)))) * (((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"contract\"}) or on() vector(0))) > bool (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"e2e\"}) or on() vector(0)))) * ((max(test_pyramid_total_duration_seconds{job=\"test-pyramid-latest\"}) or on() vector(999999)) < bool 900))"
+            }
+          ],
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 12,
+          "type": "timeseries",
+          "title": "History - Tests by Type Trend",
+          "gridPos": {"h": 9, "w": 12, "x": 0, "y": 33},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "bars",
+                "barAlignment": 0,
+                "lineWidth": 0,
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {"mode": "normal", "group": "tests"}
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by (kind) (test_pyramid_tests_count{job=\"test-pyramid-latest\"})",
+              "legendFormat": "{{kind}}"
+            }
+          ],
+          "options": {
+            "legend": {"displayMode": "table", "placement": "bottom"},
+            "tooltip": {"mode": "multi", "sort": "none"}
+          },
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        },
+        {
+          "id": 13,
+          "type": "timeseries",
+          "title": "History - Execution Time by Type Trend (s)",
+          "gridPos": {"h": 9, "w": 12, "x": 12, "y": 33},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "bars",
+                "barAlignment": 0,
+                "lineWidth": 0,
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {"mode": "normal", "group": "duration"}
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by (kind) (test_pyramid_duration_seconds{job=\"test-pyramid-latest\"})",
+              "legendFormat": "{{kind}}"
+            }
+          ],
+          "options": {
+            "legend": {"displayMode": "table", "placement": "bottom"},
+            "tooltip": {"mode": "multi", "sort": "none"}
+          },
+          "datasource": {"type": "prometheus", "uid": "prometheus"}
+        }
+      ]
+    }

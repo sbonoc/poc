@@ -10,10 +10,17 @@ PRODUCER_LOCAL_PORT ?= 8080
 PRODUCER_SERVICE_PORT ?= 8080
 GRAFANA_LOCAL_PORT ?= 3000
 GRAFANA_SERVICE_PORT ?= 3000
+PUSHGATEWAY_URL ?= http://localhost:9091
+PUSHGATEWAY_JOB ?= test-pyramid-latest
+PUSHGATEWAY_INSTANCE ?= latest
+PUSHGATEWAY_HISTORY_JOB ?= test-pyramid-history
+PUSH_HISTORY ?= false
+RUN_ID ?=
+PUSHGATEWAY_LOCAL_PORT ?= 9091
 
 .PHONY: preflight bootstrap-control-planes build-images deploy-local wait-local teardown-local destroy-control-planes smoke-test
 .PHONY: unit-test integration-test contract-test e2e-test quality verify format run-producer-local run-consumer-local
-.PHONY: pact-regenerate port-forward-local help
+.PHONY: pact-regenerate test-pyramid-metrics push-test-pyramid-metrics push-test-pyramid-history port-forward-local help
 
 help:
 	@echo "Usage: make <target> [VAR=value]"
@@ -29,6 +36,9 @@ help:
 	@echo
 	@echo "Verification targets:"
 	@echo "  unit-test integration-test contract-test e2e-test"
+	@echo "  test-pyramid-metrics  Generate absolute/percentage/duration pyramid metrics"
+	@echo "  push-test-pyramid-metrics Push generated metrics to Pushgateway"
+	@echo "  push-test-pyramid-history Push generated metrics as per-run history snapshot"
 	@echo "  pact-regenerate       Regenerate consumer pact and verify provider against it"
 	@echo "  quality verify format"
 	@echo
@@ -37,12 +47,20 @@ help:
 	@echo "  ./teardown.sh --help"
 	@echo "  ./burst-test.sh --help"
 	@echo "  ./scripts/create-local-gcp-emulator-secret.sh --help"
+	@echo "  ./scripts/push-test-pyramid-metrics.sh --help"
 	@echo
 	@echo "Useful variables:"
 	@echo "  APP_NAMESPACE=$(APP_NAMESPACE)"
 	@echo "  PORT_FORWARD_NAMESPACE=$(PORT_FORWARD_NAMESPACE)"
 	@echo "  PRODUCER_LOCAL_PORT=$(PRODUCER_LOCAL_PORT)"
 	@echo "  GRAFANA_LOCAL_PORT=$(GRAFANA_LOCAL_PORT)"
+	@echo "  PUSHGATEWAY_URL=$(PUSHGATEWAY_URL)"
+	@echo "  PUSHGATEWAY_JOB=$(PUSHGATEWAY_JOB)"
+	@echo "  PUSHGATEWAY_INSTANCE=$(PUSHGATEWAY_INSTANCE)"
+	@echo "  PUSHGATEWAY_HISTORY_JOB=$(PUSHGATEWAY_HISTORY_JOB)"
+	@echo "  PUSH_HISTORY=$(PUSH_HISTORY)"
+	@echo "  RUN_ID=$(RUN_ID)"
+	@echo "  PUSHGATEWAY_LOCAL_PORT=$(PUSHGATEWAY_LOCAL_PORT)"
 
 preflight:
 	@command -v kubectl >/dev/null || (echo "kubectl is required" && exit 1)
@@ -101,6 +119,7 @@ wait-local:
 	kubectl -n $(APP_NAMESPACE) wait --for=condition=available deployment/consumer --timeout=180s
 	kubectl -n $(APP_NAMESPACE) wait --for=condition=available deployment/otel-collector --timeout=180s
 	kubectl -n $(APP_NAMESPACE) wait --for=condition=available deployment/prometheus --timeout=180s
+	kubectl -n $(APP_NAMESPACE) wait --for=condition=available deployment/pushgateway --timeout=180s
 	kubectl -n $(APP_NAMESPACE) wait --for=condition=available deployment/tempo --timeout=180s
 	kubectl -n $(APP_NAMESPACE) wait --for=condition=available deployment/grafana --timeout=180s
 
@@ -113,6 +132,7 @@ teardown-local:
 	@kubectl -n $(APP_NAMESPACE) wait --for=delete deployment/consumer --timeout=120s >/dev/null 2>&1 || true
 	@kubectl -n $(APP_NAMESPACE) wait --for=delete deployment/otel-collector --timeout=120s >/dev/null 2>&1 || true
 	@kubectl -n $(APP_NAMESPACE) wait --for=delete deployment/prometheus --timeout=120s >/dev/null 2>&1 || true
+	@kubectl -n $(APP_NAMESPACE) wait --for=delete deployment/pushgateway --timeout=120s >/dev/null 2>&1 || true
 	@kubectl -n $(APP_NAMESPACE) wait --for=delete deployment/tempo --timeout=120s >/dev/null 2>&1 || true
 	@kubectl -n $(APP_NAMESPACE) wait --for=delete deployment/grafana --timeout=120s >/dev/null 2>&1 || true
 
@@ -140,6 +160,26 @@ pact-regenerate:
 
 e2e-test:
 	RUN_E2E=true ./gradlew e2eTest
+
+test-pyramid-metrics:
+	./gradlew testPyramidMetrics
+
+push-test-pyramid-metrics:
+	@norm_url=$$(echo "$(PUSHGATEWAY_URL)" | tr '[:upper:]' '[:lower:]'); \
+	if [[ "$$norm_url" == http://localhost* || "$$norm_url" == http://127.0.0.1* ]]; then \
+		kubectl -n $(PORT_FORWARD_NAMESPACE) wait --for=condition=available deployment/pushgateway --timeout=120s; \
+		mkdir -p build; \
+		kubectl -n $(PORT_FORWARD_NAMESPACE) port-forward svc/pushgateway $(PUSHGATEWAY_LOCAL_PORT):9091 >build/pf-pushgateway.log 2>&1 & \
+		pushgateway_pid=$$!; \
+		trap 'kill $$pushgateway_pid >/dev/null 2>&1 || true' INT TERM EXIT; \
+		sleep 2; \
+		HISTORY_JOB="$(PUSHGATEWAY_HISTORY_JOB)" PUSH_HISTORY="$(PUSH_HISTORY)" RUN_ID="$(RUN_ID)" ./scripts/push-test-pyramid-metrics.sh http://localhost:$(PUSHGATEWAY_LOCAL_PORT) $(PUSHGATEWAY_JOB) $(PUSHGATEWAY_INSTANCE); \
+	else \
+		HISTORY_JOB="$(PUSHGATEWAY_HISTORY_JOB)" PUSH_HISTORY="$(PUSH_HISTORY)" RUN_ID="$(RUN_ID)" ./scripts/push-test-pyramid-metrics.sh $(PUSHGATEWAY_URL) $(PUSHGATEWAY_JOB) $(PUSHGATEWAY_INSTANCE); \
+	fi
+
+push-test-pyramid-history: PUSH_HISTORY=true
+push-test-pyramid-history: push-test-pyramid-metrics
 
 quality:
 	./gradlew ktlintCheck detekt koverVerify
