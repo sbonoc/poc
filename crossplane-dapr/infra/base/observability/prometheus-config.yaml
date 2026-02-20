@@ -13,15 +13,35 @@ data:
         static_configs:
           - targets: ["otel-collector:9464"]
 
-      - job_name: producer
+      - job_name: producer-ktor
         metrics_path: /metrics
         static_configs:
-          - targets: ["producer:8080"]
+          - targets: ["producer-ktor:8080"]
 
-      - job_name: consumer
+      - job_name: consumer-ktor
         metrics_path: /metrics
         static_configs:
-          - targets: ["consumer:8080"]
+          - targets: ["consumer-ktor:8080"]
+
+      - job_name: producer-gin
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["producer-gin:8080"]
+
+      - job_name: consumer-gin
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["consumer-gin:8080"]
+
+      - job_name: producer-springboot
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["producer-springboot:8080"]
+
+      - job_name: consumer-springboot
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["consumer-springboot:8080"]
 
       - job_name: pushgateway
         honor_labels: true

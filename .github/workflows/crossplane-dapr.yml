@@ -31,51 +31,88 @@ jobs:
           java-version: '21'
           cache: gradle
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+          cache-dependency-path: |
+            crossplane-dapr/producer-gin/go.sum
+            crossplane-dapr/consumer-gin/go.sum
+
       - name: Make Gradle executable
         run: chmod +x gradlew
 
-      - name: Unit tests
-        run: ./gradlew unitTest
+      - name: Unit tests (Ktor + Spring Boot + Gin)
+        run: make unit-test
 
       - name: Static quality gates
         run: ./gradlew ktlintCheck detekt
 
-      - name: Integration tests
-        run: ./gradlew integrationTest
+      - name: Integration tests (Ktor + Spring Boot + Gin)
+        run: make integration-test
 
-      - name: Contract tests
-        run: ./gradlew contractTest
+      - name: Contract tests (Ktor + Spring Boot + Gin)
+        run: make contract-test
 
       - name: Coverage gate
         run: ./gradlew koverVerify
 
-      - name: Build test pyramid metrics file
-        run: ./gradlew collectTestPyramidMetrics
+      - name: Build stack/service-separated test pyramid metrics files
+        run: make test-pyramid-metrics
 
       - name: Test pyramid summary (GitHub UI)
         if: ${{ always() }}
         run: |
-          SUMMARY_FILE="build/reports/test-pyramid/summary.json"
-
           {
             echo "## Crossplane Dapr Test Pyramid"
             echo ""
-            if [[ ! -f "$SUMMARY_FILE" ]]; then
-              echo "No summary file found."
-              exit 0
-            fi
-
-            total_tests=$(jq -r '(.totals.tests // "N/A") | tostring' "$SUMMARY_FILE")
-            total_duration=$(jq -r '(.totals.durationSeconds // "N/A") | tostring' "$SUMMARY_FILE")
-            generated_at=$(jq -r '.generatedAt // "N/A"' "$SUMMARY_FILE")
-
-            echo "- Generated at: \`$generated_at\`"
-            echo "- Total tests: **$total_tests**"
-            echo "- Total duration: **${total_duration}s**"
+            echo "### By Stack"
             echo ""
-            echo "| Suite | Tests | Failures | Skipped | Duration (s) | Tests % | Duration % |"
-            echo "|---|---:|---:|---:|---:|---:|---:|"
-            jq -r '(.suites // [])[] | "| \(.kind // "N/A") | \(.tests // "N/A") | \(.failures // "N/A") | \(.skipped // "N/A") | \(.durationSeconds // "N/A") | \(.testsPercentage // "N/A") | \(.durationPercentage // "N/A") |"' "$SUMMARY_FILE"
+            stack_targets="$(./scripts/test-pyramid-targets.sh stacks)"
+            for target in ${stack_targets}; do
+              summary_file="build/reports/test-pyramid/${target}/summary.json"
+              echo "#### ${target}"
+              echo ""
+              if [[ -f "$summary_file" ]]; then
+                total_tests=$(jq -r '(.totals.tests // "N/A") | tostring' "$summary_file")
+                total_duration=$(jq -r '(.totals.durationSeconds // "N/A") | tostring' "$summary_file")
+                generated_at=$(jq -r '.generatedAt // "N/A"' "$summary_file")
+                echo "- Generated at: \`$generated_at\`"
+                echo "- Total tests: **$total_tests**"
+                echo "- Total duration: **${total_duration}s**"
+                echo ""
+                echo "| Suite | Tests | Failures | Skipped | Duration (s) | Tests % | Duration % |"
+                echo "|---|---:|---:|---:|---:|---:|---:|"
+                jq -r '(.suites // [])[] | "| \(.kind // "N/A") | \(.tests // "N/A") | \(.failures // "N/A") | \(.skipped // "N/A") | \(.durationSeconds // "N/A") | \(.testsPercentage // "N/A") | \(.durationPercentage // "N/A") |"' "$summary_file"
+              else
+                echo "No summary file found."
+              fi
+              echo ""
+            done
+
+            echo "### By Service"
+            echo ""
+            service_targets="$(./scripts/test-pyramid-targets.sh services)"
+            for target in ${service_targets}; do
+              summary_file="build/reports/test-pyramid/${target}/summary.json"
+              echo "#### ${target}"
+              echo ""
+              if [[ -f "$summary_file" ]]; then
+                total_tests=$(jq -r '(.totals.tests // "N/A") | tostring' "$summary_file")
+                total_duration=$(jq -r '(.totals.durationSeconds // "N/A") | tostring' "$summary_file")
+                generated_at=$(jq -r '.generatedAt // "N/A"' "$summary_file")
+                echo "- Generated at: \`$generated_at\`"
+                echo "- Total tests: **$total_tests**"
+                echo "- Total duration: **${total_duration}s**"
+                echo ""
+                echo "| Suite | Tests | Failures | Skipped | Duration (s) | Tests % | Duration % |"
+                echo "|---|---:|---:|---:|---:|---:|---:|"
+                jq -r '(.suites // [])[] | "| \(.kind // "N/A") | \(.tests // "N/A") | \(.failures // "N/A") | \(.skipped // "N/A") | \(.durationSeconds // "N/A") | \(.testsPercentage // "N/A") | \(.durationPercentage // "N/A") |"' "$summary_file"
+              else
+                echo "No summary file found."
+              fi
+              echo ""
+            done
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Publish test pyramid metrics
@@ -91,8 +128,9 @@ jobs:
         with:
           name: crossplane-dapr-test-pyramid-${{ github.run_id }}
           path: |
-            crossplane-dapr/build/reports/test-pyramid/summary.json
-            crossplane-dapr/build/reports/test-pyramid/test-pyramid.prom
+            crossplane-dapr/build/reports/test-pyramid/**/summary.json
+            crossplane-dapr/build/reports/test-pyramid/**/test-pyramid.prom
+            crossplane-dapr/build/reports/test-pyramid/gin/raw/*.json
             crossplane-dapr/**/build/test-results/**/TEST-*.xml
           if-no-files-found: warn
 
@@ -114,10 +152,18 @@ jobs:
           java-version: '21'
           cache: gradle
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+          cache-dependency-path: |
+            crossplane-dapr/producer-gin/go.sum
+            crossplane-dapr/consumer-gin/go.sum
+
       - name: Make Gradle executable
         run: chmod +x gradlew
 
       - name: E2E smoke (opt-in)
         env:
           RUN_E2E: "true"
-        run: ./gradlew e2eTest
+        run: make e2e-test

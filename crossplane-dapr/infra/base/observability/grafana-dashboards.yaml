@@ -8,7 +8,7 @@ data:
       "id": null,
       "uid": "service-overview",
       "title": "Crossplane Dapr - Service Overview",
-      "tags": ["crossplane-dapr", "producer", "consumer"],
+      "tags": ["crossplane-dapr", "producer-ktor", "consumer-ktor", "producer-gin", "consumer-gin", "producer-springboot", "consumer-springboot"],
       "timezone": "browser",
       "schemaVersion": 39,
       "version": 1,
@@ -16,6 +16,60 @@ data:
       "time": {
         "from": "now-30m",
         "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "stack",
+            "label": "Stack",
+            "type": "custom",
+            "query": "ktor,gin,springboot",
+            "includeAll": true,
+            "multi": true,
+            "allValue": ".*",
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
+            }
+          },
+          {
+            "name": "role",
+            "label": "Role",
+            "type": "custom",
+            "query": "producer,consumer",
+            "includeAll": true,
+            "multi": true,
+            "allValue": ".*",
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
+            }
+          },
+          {
+            "name": "service",
+            "label": "Service",
+            "type": "query",
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "refresh": 2,
+            "hide": 0,
+            "includeAll": true,
+            "multi": true,
+            "allValue": ".*",
+            "definition": "label_values(up{job=~\"$role-$stack\"}, job)",
+            "query": {
+              "query": "label_values(up{job=~\"$role-$stack\"}, job)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "sort": 1,
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
+            }
+          }
+        ]
       },
       "panels": [
         {
@@ -26,7 +80,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "sum(rate(orders_publish_requests_total[5m]))"
+              "expr": "sum(rate(orders_publish_requests_total{job=~\"$service\"}[5m]))"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
@@ -39,7 +93,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "sum(rate(orders_consume_requests_total[5m]))"
+              "expr": "sum(rate(orders_consume_requests_total{job=~\"$service\"}[5m]))"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
@@ -52,7 +106,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "sum(rate(orders_published_total[5m]))"
+              "expr": "sum(rate(orders_published_total{job=~\"$service\"}[5m]))"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
@@ -65,7 +119,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "sum(rate(orders_consumed_total[5m]))"
+              "expr": "sum(rate(orders_consumed_total{job=~\"$service\"}[5m]))"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
@@ -73,12 +127,12 @@ data:
         {
           "id": 5,
           "type": "timeseries",
-          "title": "HTTP Error Rate by Job",
+          "title": "Publish/Consume Errors by Job",
           "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
           "targets": [
             {
               "refId": "A",
-              "expr": "sum(rate(http_server_errors_total[5m])) by (job)"
+              "expr": "sum(rate(orders_publish_errors_total{job=~\"$service\"}[5m])) by (job) or sum(rate(orders_consume_errors_total{job=~\"$service\"}[5m])) by (job)"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
@@ -112,6 +166,60 @@ data:
         "from": "now-30m",
         "to": "now"
       },
+      "templating": {
+        "list": [
+          {
+            "name": "stack",
+            "label": "Stack",
+            "type": "custom",
+            "query": "ktor,gin,springboot",
+            "includeAll": true,
+            "multi": true,
+            "allValue": ".*",
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
+            }
+          },
+          {
+            "name": "role",
+            "label": "Role",
+            "type": "custom",
+            "query": "producer,consumer",
+            "includeAll": true,
+            "multi": true,
+            "allValue": ".*",
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
+            }
+          },
+          {
+            "name": "service",
+            "label": "Service",
+            "type": "query",
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "refresh": 2,
+            "hide": 0,
+            "includeAll": true,
+            "multi": true,
+            "allValue": ".*",
+            "definition": "label_values(up{job=~\"$role-$stack\"}, job)",
+            "query": {
+              "query": "label_values(up{job=~\"$role-$stack\"}, job)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "sort": 1,
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
+            }
+          }
+        ]
+      },
       "panels": [
         {
           "id": 1,
@@ -121,12 +229,12 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "sum(rate(orders_publish_requests_total[5m]))",
+              "expr": "sum(rate(orders_publish_requests_total{job=~\"$service\"}[5m]))",
               "legendFormat": "publish"
             },
             {
               "refId": "B",
-              "expr": "sum(rate(orders_consume_requests_total[5m]))",
+              "expr": "sum(rate(orders_consume_requests_total{job=~\"$service\"}[5m]))",
               "legendFormat": "consume"
             }
           ],
@@ -135,18 +243,18 @@ data:
         {
           "id": 2,
           "type": "timeseries",
-          "title": "Producer and Consumer HTTP Requests",
+          "title": "Request Rate by Service",
           "gridPos": {"h": 9, "w": 24, "x": 0, "y": 9},
           "targets": [
             {
               "refId": "A",
-              "expr": "sum(rate(ktor_http_server_requests_seconds_count{job=\"producer\"}[5m]))",
-              "legendFormat": "producer"
+              "expr": "sum(rate(orders_publish_requests_total{job=~\"$service\"}[5m])) by (job)",
+              "legendFormat": "{{job}} publish"
             },
             {
               "refId": "B",
-              "expr": "sum(rate(ktor_http_server_requests_seconds_count{job=\"consumer\"}[5m]))",
-              "legendFormat": "consumer"
+              "expr": "sum(rate(orders_consume_requests_total{job=~\"$service\"}[5m])) by (job)",
+              "legendFormat": "{{job}} consume"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
@@ -158,7 +266,7 @@ data:
           "gridPos": {"h": 6, "w": 24, "x": 0, "y": 18},
           "options": {
             "mode": "markdown",
-            "content": "Use **Explore** with Tempo datasource and query by service names:\n- `{ resource.service.name=\"producer\" }`\n- `{ resource.service.name=\"consumer\" }`\n\nThis stack exports traces through OTLP to the collector and stores them in Tempo."
+            "content": "Use **Explore** with Tempo datasource and query by service names selected in the filters:\n- `{ resource.service.name=~\"$service\" }`\n\nAll services export traces through OTLP to the collector and store them in Tempo."
           }
         }
       ]
@@ -168,7 +276,7 @@ data:
       "id": null,
       "uid": "golden-signals",
       "title": "Crossplane Dapr - Golden Signals",
-      "tags": ["crossplane-dapr", "golden-signals", "producer", "consumer"],
+      "tags": ["crossplane-dapr", "golden-signals", "producer-ktor", "consumer-ktor", "producer-gin", "consumer-gin", "producer-springboot", "consumer-springboot"],
       "timezone": "browser",
       "schemaVersion": 39,
       "version": 1,
@@ -176,6 +284,60 @@ data:
       "time": {
         "from": "now-30m",
         "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "stack",
+            "label": "Stack",
+            "type": "custom",
+            "query": "ktor,gin,springboot",
+            "includeAll": true,
+            "multi": true,
+            "allValue": ".*",
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
+            }
+          },
+          {
+            "name": "role",
+            "label": "Role",
+            "type": "custom",
+            "query": "producer,consumer",
+            "includeAll": true,
+            "multi": true,
+            "allValue": ".*",
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
+            }
+          },
+          {
+            "name": "service",
+            "label": "Service",
+            "type": "query",
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "refresh": 2,
+            "hide": 0,
+            "includeAll": true,
+            "multi": true,
+            "allValue": ".*",
+            "definition": "label_values(up{job=~\"$role-$stack\"}, job)",
+            "query": {
+              "query": "label_values(up{job=~\"$role-$stack\"}, job)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "sort": 1,
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
+            }
+          }
+        ]
       },
       "panels": [
         {
@@ -187,7 +349,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "sum(rate(ktor_http_server_requests_seconds_count{job=~\"producer|consumer\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) by (job)",
+              "expr": "sum by (job) (rate(ktor_http_server_requests_seconds_count{job=~\"$service\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m]) or rate(http_server_requests_seconds_count{job=~\"$service\",uri!~\"/metrics|/health/live|/health/ready\"}[5m]))",
               "legendFormat": "{{job}}"
             }
           ],
@@ -202,7 +364,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "(sum(rate(ktor_http_server_requests_seconds_sum{job=~\"producer|consumer\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) by (job) / clamp_min(sum(rate(ktor_http_server_requests_seconds_count{job=~\"producer|consumer\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) by (job), 0.001)) * 1000",
+              "expr": "(sum by (job) (rate(ktor_http_server_requests_seconds_sum{job=~\"$service\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m]) or rate(http_server_requests_seconds_sum{job=~\"$service\",uri!~\"/metrics|/health/live|/health/ready\"}[5m])) / clamp_min(sum by (job) (rate(ktor_http_server_requests_seconds_count{job=~\"$service\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m]) or rate(http_server_requests_seconds_count{job=~\"$service\",uri!~\"/metrics|/health/live|/health/ready\"}[5m])), 0.001)) * 1000",
               "legendFormat": "{{job}}"
             }
           ],
@@ -217,7 +379,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "max by (job) (max_over_time(ktor_http_server_requests_seconds_max{job=~\"producer|consumer\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) * 1000",
+              "expr": "max by (job) ((max_over_time(ktor_http_server_requests_seconds_max{job=~\"$service\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m]) or max_over_time(http_server_requests_seconds_max{job=~\"$service\",uri!~\"/metrics|/health/live|/health/ready\"}[5m])) * 1000)",
               "legendFormat": "{{job}}"
             }
           ],
@@ -232,7 +394,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "100 * sum(rate(ktor_http_server_requests_seconds_count{job=~\"producer|consumer\",status=~\"5..\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) by (job) / clamp_min(sum(rate(ktor_http_server_requests_seconds_count{job=~\"producer|consumer\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) by (job), 0.001)",
+              "expr": "100 * sum by (job) (rate(ktor_http_server_requests_seconds_count{job=~\"$service\",status=~\"5..\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m]) or rate(http_server_requests_seconds_count{job=~\"$service\",status=~\"5..\",uri!~\"/metrics|/health/live|/health/ready\"}[5m])) / clamp_min(sum by (job) (rate(ktor_http_server_requests_seconds_count{job=~\"$service\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m]) or rate(http_server_requests_seconds_count{job=~\"$service\",uri!~\"/metrics|/health/live|/health/ready\"}[5m])), 0.001)",
               "legendFormat": "{{job}}"
             }
           ],
@@ -247,7 +409,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "sum(rate(ktor_http_server_requests_seconds_count{job=~\"producer|consumer\",status=~\"4..|5..\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m])) by (job)",
+              "expr": "sum by (job) (rate(ktor_http_server_requests_seconds_count{job=~\"$service\",status=~\"4..|5..\",route!~\"/metrics|/health/live|/health/ready\",route!=\"n/a\"}[5m]) or rate(http_server_requests_seconds_count{job=~\"$service\",status=~\"4..|5..\",uri!~\"/metrics|/health/live|/health/ready\"}[5m]))",
               "legendFormat": "{{job}}"
             }
           ],
@@ -262,7 +424,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "avg_over_time(process_cpu_usage{job=~\"producer|consumer\"}[5m]) * 100",
+              "expr": "avg_over_time(process_cpu_usage{job=~\"$service\"}[5m]) * 100",
               "legendFormat": "{{job}}"
             }
           ],
@@ -277,7 +439,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "100 * sum(jvm_memory_used_bytes{job=~\"producer|consumer\",area=\"heap\"}) by (job) / clamp_min(sum(jvm_memory_max_bytes{job=~\"producer|consumer\",area=\"heap\"}) by (job), 1)",
+              "expr": "100 * sum(jvm_memory_used_bytes{job=~\"$service\",area=\"heap\"}) by (job) / clamp_min(sum(jvm_memory_max_bytes{job=~\"$service\",area=\"heap\"}) by (job), 1)",
               "legendFormat": "{{job}}"
             }
           ],
@@ -286,13 +448,13 @@ data:
         {
           "id": 8,
           "type": "timeseries",
-          "title": "Saturation - In-flight HTTP Requests",
+          "title": "Saturation - In-flight HTTP Requests (Ktor)",
           "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
           "fieldConfig": {"defaults": {"unit": "none"}, "overrides": []},
           "targets": [
             {
               "refId": "A",
-              "expr": "sum(ktor_http_server_requests_active{job=~\"producer|consumer\",route!~\"/metrics|/health/live|/health/ready\"}) by (job)",
+              "expr": "sum(ktor_http_server_requests_active{job=~\"$service\",route!~\"/metrics|/health/live|/health/ready\"}) by (job)",
               "legendFormat": "{{job}}"
             }
           ],
@@ -314,6 +476,32 @@ data:
         "from": "now-24h",
         "to": "now"
       },
+      "templating": {
+        "list": [
+          {
+            "name": "service",
+            "label": "Service",
+            "type": "query",
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "refresh": 1,
+            "hide": 0,
+            "includeAll": false,
+            "multi": false,
+            "definition": "label_values(test_pyramid_total_tests{job=~\"test-pyramid-latest-(producer|consumer)-.+\"}, job)",
+            "query": {
+              "query": "label_values(test_pyramid_total_tests{job=~\"test-pyramid-latest-(producer|consumer)-.+\"}, job)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "regex": "/test-pyramid-latest-(.*)/",
+            "sort": 1,
+            "current": {
+              "selected": true,
+              "text": "producer-ktor",
+              "value": "producer-ktor"
+            }
+          }
+        ]
+      },
       "panels": [
         {
           "id": 1,
@@ -324,7 +512,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "max(test_pyramid_total_tests{job=\"test-pyramid-latest\"})"
+              "expr": "max(test_pyramid_total_tests{job=~\"test-pyramid-latest-$service\"})"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
@@ -338,7 +526,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "max(test_pyramid_total_duration_seconds{job=\"test-pyramid-latest\"})"
+              "expr": "max(test_pyramid_total_duration_seconds{job=~\"test-pyramid-latest-$service\"})"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
@@ -352,7 +540,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "(time() - max(test_pyramid_last_update_unix_seconds{job=\"test-pyramid-latest\"})) / 60"
+              "expr": "(time() - max(test_pyramid_last_update_unix_seconds{job=~\"test-pyramid-latest-$service\"})) / 60"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
@@ -366,7 +554,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "max by (kind) (test_pyramid_tests_count{job=\"test-pyramid-latest\"})",
+              "expr": "max by (kind) (test_pyramid_tests_count{job=~\"test-pyramid-history-$service|test-pyramid-latest-$service\"})",
               "legendFormat": "{{kind}}"
             }
           ],
@@ -381,7 +569,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "max by (kind) (test_pyramid_tests_percentage{job=\"test-pyramid-latest\"})",
+              "expr": "max by (kind) (test_pyramid_tests_percentage{job=~\"test-pyramid-latest-$service\"})",
               "legendFormat": "{{kind}}"
             }
           ],
@@ -396,7 +584,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "max by (kind) (test_pyramid_duration_seconds{job=\"test-pyramid-latest\"})",
+              "expr": "max by (kind) (test_pyramid_duration_seconds{job=~\"test-pyramid-history-$service|test-pyramid-latest-$service\"})",
               "legendFormat": "{{kind}}"
             }
           ],
@@ -411,7 +599,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "max by (kind) (test_pyramid_duration_percentage{job=\"test-pyramid-latest\"})",
+              "expr": "max by (kind) (test_pyramid_duration_percentage{job=~\"test-pyramid-latest-$service\"})",
               "legendFormat": "{{kind}}"
             }
           ],
@@ -426,7 +614,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "max by (kind) (test_pyramid_failures_count{job=\"test-pyramid-latest\"})",
+              "expr": "max by (kind) (test_pyramid_failures_count{job=~\"test-pyramid-latest-$service\"})",
               "legendFormat": "{{kind}}"
             }
           ],
@@ -466,7 +654,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "(((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"unit\"}) or on() vector(0)) > bool ((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"contract\"}) or on() vector(0)))) * (((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"contract\"}) or on() vector(0))) > bool (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"e2e\"}) or on() vector(0))))"
+              "expr": "(((max(test_pyramid_tests_count{job=~\"test-pyramid-latest-$service\",kind=\"unit\"}) or on() vector(0)) > bool ((max(test_pyramid_tests_count{job=~\"test-pyramid-latest-$service\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=~\"test-pyramid-latest-$service\",kind=\"contract\"}) or on() vector(0)))) * (((max(test_pyramid_tests_count{job=~\"test-pyramid-latest-$service\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=~\"test-pyramid-latest-$service\",kind=\"contract\"}) or on() vector(0))) > bool (max(test_pyramid_tests_count{job=~\"test-pyramid-latest-$service\",kind=\"e2e\"}) or on() vector(0))))"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
@@ -505,7 +693,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "((max(test_pyramid_total_duration_seconds{job=\"test-pyramid-latest\"}) or on() vector(999999)) < bool 900)"
+              "expr": "((max(test_pyramid_total_duration_seconds{job=~\"test-pyramid-latest-$service\"}) or on() vector(999999)) < bool 900)"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
@@ -544,7 +732,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "((((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"unit\"}) or on() vector(0)) > bool ((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"contract\"}) or on() vector(0)))) * (((max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"contract\"}) or on() vector(0))) > bool (max(test_pyramid_tests_count{job=\"test-pyramid-latest\",kind=\"e2e\"}) or on() vector(0)))) * ((max(test_pyramid_total_duration_seconds{job=\"test-pyramid-latest\"}) or on() vector(999999)) < bool 900))"
+              "expr": "((((max(test_pyramid_tests_count{job=~\"test-pyramid-latest-$service\",kind=\"unit\"}) or on() vector(0)) > bool ((max(test_pyramid_tests_count{job=~\"test-pyramid-latest-$service\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=~\"test-pyramid-latest-$service\",kind=\"contract\"}) or on() vector(0)))) * (((max(test_pyramid_tests_count{job=~\"test-pyramid-latest-$service\",kind=\"integration\"}) or on() vector(0)) + (max(test_pyramid_tests_count{job=~\"test-pyramid-latest-$service\",kind=\"contract\"}) or on() vector(0))) > bool (max(test_pyramid_tests_count{job=~\"test-pyramid-latest-$service\",kind=\"e2e\"}) or on() vector(0)))) * ((max(test_pyramid_total_duration_seconds{job=~\"test-pyramid-latest-$service\"}) or on() vector(999999)) < bool 900))"
             }
           ],
           "datasource": {"type": "prometheus", "uid": "prometheus"}
@@ -574,7 +762,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "max by (kind) (test_pyramid_tests_count{job=\"test-pyramid-latest\"})",
+              "expr": "max by (kind) (test_pyramid_tests_count{job=~\"test-pyramid-history-$service|test-pyramid-latest-$service\"})",
               "legendFormat": "{{kind}}"
             }
           ],
@@ -609,7 +797,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "max by (kind) (test_pyramid_duration_seconds{job=\"test-pyramid-latest\"})",
+              "expr": "max by (kind) (test_pyramid_duration_seconds{job=~\"test-pyramid-history-$service|test-pyramid-latest-$service\"})",
               "legendFormat": "{{kind}}"
             }
           ],

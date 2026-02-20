@@ -6,7 +6,7 @@ usage() {
 Usage: ./deploy.sh [--port-forward] [--help|help]
 
 Options:
-  --port-forward   Start producer+grafana port-forward after deploy (blocks until Ctrl+C)
+  --port-forward   Start all app + grafana port-forwards after deploy (blocks until Ctrl+C)
   --help, help     Show this help
 
 Examples:
@@ -42,4 +42,4 @@ if [[ "${with_port_forward}" == "true" ]]; then
 fi
 
 echo "Deployment finished."
-echo "Run 'make port-forward-local' to expose producer and grafana."
+echo "Run 'make port-forward-local' to expose all apps and grafana."

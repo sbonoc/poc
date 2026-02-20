@@ -75,3 +75,8 @@ bin/
 # Local cluster state/logs
 *.kubeconfig
 dapr-*.log
+.tools/
+
+# Local Go build binaries
+/consumer-gin/consumer
+/producer-gin/producer

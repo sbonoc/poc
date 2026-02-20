@@ -14,6 +14,8 @@ dependencyResolutionManagement {
     }
 }
 
-include(":common")
-include(":producer")
-include(":consumer")
+include(":common-ktor")
+include(":producer-ktor")
+include(":consumer-ktor")
+include(":producer-springboot")
+include(":consumer-springboot")

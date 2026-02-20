@@ -9,5 +9,9 @@ spec:
     - name: projectId
       value: local-project
 scopes:
-  - producer
-  - consumer
+  - producer-ktor
+  - consumer-ktor
+  - producer-gin
+  - consumer-gin
+  - producer-springboot
+  - consumer-springboot
