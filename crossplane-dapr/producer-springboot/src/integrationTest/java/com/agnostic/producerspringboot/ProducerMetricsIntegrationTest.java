@@ -15,7 +15,7 @@ class ProducerMetricsIntegrationTest {
 
     @Test
     void readinessEndpointIsAvailable() {
-        ResponseEntity<String> response = restTemplate.getForEntity("/health/ready", String.class);
+        ResponseEntity<String> response = restTemplate.getForEntity("/health/readiness", String.class);
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
         assertThat(response.getBody()).contains("UP");
     }
