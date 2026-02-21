@@ -51,38 +51,25 @@ This stack addresses those problems:
 - **Grafana** visualizes dashboards (including Golden Signals).
 
 ```text
-+--------------------------------------------------------------------------+
-|                        KUBERNETES CLUSTER                                |
-|                                                                          |
-| [APP NAMESPACE]                                                          |
-| producer Pod                     consumer Pod                            |
-| +---------------------------+    +---------------------------+           |
-| | Ktor producer             |    | Ktor consumer             |           |
-| | POST /publish             |    | GET /dapr/subscribe       |           |
-| +------------+--------------+    | POST /orders              |           |
-|              | localhost:3500    +------------^--------------+           |
-| +------------v--------------+                 | localhost:3500            |
-| | daprd (producer)          |                 |                           |
-| +------------+--------------+    +------------+--------------+           |
-|              | publish evt       | daprd (consumer)          |           |
-|              +------------------>| subscribe + push          |           |
-|                                  +------------^--------------+           |
-|                                               |                          |
-|            +----------------------------------+------------------------+ |
-|            | Dapr component: order-pubsub (topic=orders)             | |
-|            +----------------------------------+------------------------+ |
-|                                               |                          |
-|                                               v                          |
-|     local: gcp-emulator...:8085  |  prod: GCP Pub/Sub                  |
-|                                                                          |
-| [OBSERVABILITY]                                                          |
-| apps + daprd -> OTLP -> otel-collector -> tempo                         |
-|                                 -> prometheus -> grafana                |
-| kubernetes logs -> promtail -> loki -> grafana                          |
-|                                                                          |
-| [CROSSPLANE-SYSTEM]                                                      |
-| MessageBus claim -> XRD/Composition -> managed Topic                    |
-+--------------------------------------------------------------------------+
++------------------------------------------------------------------------------+
+|                              KUBERNETES CLUSTER                              |
+|                                                                              |
+| [APP NAMESPACE]                                                              |
+| producer-* (ktor/gin/springboot): POST /publish                              |
+| consumer-* (ktor/gin/springboot): GET /dapr/subscribe, POST /orders          |
+|                                                                              |
+| producer app -> daprd -> order-pubsub(topic=orders) -> daprd -> consumer app |
+|                                                                              |
+| local backend: gcp-emulator.crossplane-system.svc.cluster.local:8085         |
+| prod backend:  GCP Pub/Sub                                                   |
+|                                                                              |
+| [OBSERVABILITY]                                                              |
+| apps + daprd -> OTLP -> otel-collector -> tempo / prometheus -> grafana      |
+| kubernetes logs -> promtail -> loki -> grafana                               |
+|                                                                              |
+| [CROSSPLANE-SYSTEM]                                                          |
+| MessageBus claim -> XRD/Composition -> managed Topic                         |
++------------------------------------------------------------------------------+
 ```
 
 ---
@@ -273,6 +260,9 @@ Optional full cleanup (remove control planes too):
 
 - **`env/local.env`**, **`env/prod.env`**, and **`scripts/render-overlay.sh`**
   Environment-parameterized render layer used before apply. It substitutes `${APP_NAMESPACE}`, `${GCP_PROJECT_ID}`, `${PROVIDER_CONFIG_NAME}`, and `${GCP_SECRET_NAME}` into rendered manifests under `build/rendered/<env>/infra`.
+
+- **`infra/overlays/common/kustomization.yaml`**
+  Shared overlay layer consumed by local and prod overlays (`ProviderConfig` + `MessageBus` claim).
 
 - **`infra/overlays/common/provider-config.yaml`** and **`infra/overlays/common/bus-claim.yaml`**
   Shared Crossplane runtime resources rendered per environment from `env/*.env` (`ProviderConfig` + developer-facing `MessageBus` claim).
