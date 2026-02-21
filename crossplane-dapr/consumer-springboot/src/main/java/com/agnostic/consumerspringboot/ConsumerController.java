@@ -29,7 +29,10 @@ class ConsumerController {
 
     @PostMapping("${app.subscription.route:/orders}")
     ResponseEntity<Void> consume(@RequestBody JsonNode payload) {
-        logger.debug("received consume request payloadSize={}", payload == null ? 0 : payload.toString().length());
+        if (logger.isDebugEnabled()) {
+            int payloadSize = payload == null ? 0 : payload.toString().length();
+            logger.debug("received consume request payloadSize={}", payloadSize);
+        }
         return consumerService.consume(payload);
     }
 }
