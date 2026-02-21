@@ -31,6 +31,13 @@ func resolveLogLevel() slog.Level {
 	}
 }
 
+// Logger returns the package-level slog.Logger configured with the LOG_LEVEL
+// environment variable. Call slog.SetDefault(producer.Logger()) in main to
+// ensure startup/shutdown logs respect the same level as request logs.
+func Logger() *slog.Logger {
+	return logger
+}
+
 func loggerFromGinContext(c *gin.Context) *slog.Logger {
 	if value, ok := c.Get(requestLoggerKey); ok {
 		if requestLogger, ok := value.(*slog.Logger); ok {

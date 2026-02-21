@@ -11,6 +11,7 @@ import (
 
 func main() {
 	cfg := producer.LoadConfigFromEnv()
+	slog.SetDefault(producer.Logger())
 	client := &http.Client{Timeout: 5 * time.Second}
 	service := producer.NewService(client, cfg.PublishURL())
 	router := producer.NewRouter(cfg, service, prometheus.DefaultRegisterer, prometheus.DefaultGatherer)
