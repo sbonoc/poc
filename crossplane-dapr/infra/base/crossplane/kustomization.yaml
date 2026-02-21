@@ -1,3 +1,5 @@
 resources:
   - xrd-messagebus.yaml
   - composition-messagebus.yaml
+  - provider.yaml
+  - function-patch-and-transform.yaml

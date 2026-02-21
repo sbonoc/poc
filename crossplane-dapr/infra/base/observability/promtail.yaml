@@ -25,7 +25,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: promtail
-    namespace: default # Patched to APP_NAMESPACE by `make deploy-local` for non-default namespaces.
+    namespace: ${APP_NAMESPACE}
 roleRef:
   kind: ClusterRole
   name: promtail

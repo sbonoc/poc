@@ -28,11 +28,6 @@ spec:
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 10001
-        runAsGroup: 10001
-        fsGroup: 10001
       containers:
         - name: consumer-ktor
           image: agnostic-consumer-ktor:local
@@ -66,7 +61,9 @@ spec:
             - name: APP_VERSION
               value: "1.0.0"
             - name: DEPLOYMENT_ENV
-              value: local
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['app.kubernetes.io/environment']
             - name: DAPR_PUBSUB_NAME
               value: order-pubsub
             - name: DAPR_TOPIC_NAME
@@ -100,17 +97,6 @@ spec:
               port: http
             initialDelaySeconds: 5
             periodSeconds: 5
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop: ["ALL"]
-          volumeMounts:
-            - mountPath: /tmp
-              name: temp
-      volumes:
-        - name: temp
-          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

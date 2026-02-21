@@ -1,12 +1,12 @@
 apiVersion: gcp.upbound.io/v1beta1
 kind: ProviderConfig
 metadata:
-  name: local-emulator-config
+  name: ${PROVIDER_CONFIG_NAME}
 spec:
-  projectID: local-project
+  projectID: ${GCP_PROJECT_ID}
   credentials:
     source: Secret
     secretRef:
       namespace: crossplane-system
-      name: gcp-emulator-credentials
+      name: ${GCP_SECRET_NAME}
       key: creds

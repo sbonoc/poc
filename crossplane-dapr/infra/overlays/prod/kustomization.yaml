@@ -1,16 +1,17 @@
 resources:
   - ../../base/crossplane
-  - ../../base/runtime
+  - ../../base/dapr
   - ../../base/apps
   - ../../base/observability
-  - crossplane-provider.yaml
-  - crossplane-function.yaml
-  - provider-config.yaml
-  - bus-claim.yaml
+  - ../common
 
 patches:
-  - path: dapr-pubsub-patch.yaml
-  - path: apps-env-patch.yaml
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      labelSelector: app.kubernetes.io/component in (producer,consumer)
+    path: apps-env-patch.yaml
   - path: grafana-security-patch.yaml
 
 images:
@@ -37,3 +38,4 @@ labels:
   - pairs:
       app.kubernetes.io/part-of: crossplane-dapr
       app.kubernetes.io/environment: prod
+    includeTemplates: true
