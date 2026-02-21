@@ -1,0 +1,24 @@
+- op: add
+  path: /spec/template/spec/securityContext
+  value:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+- op: add
+  path: /spec/template/spec/containers/0/securityContext
+  value:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: ["ALL"]
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts
+  value:
+    - mountPath: /tmp
+      name: temp
+- op: add
+  path: /spec/template/spec/volumes
+  value:
+    - name: temp
+      emptyDir: {}

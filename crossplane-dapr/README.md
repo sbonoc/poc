@@ -225,8 +225,8 @@ For trace correlation from logs, Gin and Spring Boot request logs include:
 
 Low-cardinality context (`service`, `stack`, `role`, `namespace`, `env`) is added by Promtail from Kubernetes metadata/labels. High-cardinality values (`trace_id`, `span_id`, `orderId`) stay in log payload for query-time filtering.
 
-Kubernetes contextual values are injected in existing Deployment manifests (`infra/base/apps/*.yaml`) via Downward API env vars (`POD_NAMESPACE`, `POD_NAME`, `NODE_NAME`) and app identity vars (`APP_SERVICE`, `APP_STACK`, `APP_ROLE`, `APP_VERSION`, `DEPLOYMENT_ENV`) for OTEL resource attributes.  
-The prod overlay (`infra/overlays/prod/apps-env-patch.yaml`) overrides `DEPLOYMENT_ENV=prod`.
+Kubernetes contextual values are injected in existing Deployment manifests (`infra/base/apps/*.yaml`) via Downward API env vars (`POD_NAMESPACE`, `POD_NAME`, `NODE_NAME`) and app identity vars (`APP_SERVICE`, `APP_STACK`, `APP_ROLE`, `APP_VERSION`).  
+`DEPLOYMENT_ENV` is derived from pod label `app.kubernetes.io/environment`, which overlays set per environment (`local`/`prod`) with `includeTemplates: true`.
 
 ### 6. Teardown
 
@@ -269,10 +269,10 @@ Optional full cleanup (remove control planes too):
 
 ### 🛜 Dapr Runtime Files
 
-- **`infra/base/runtime/dapr-config.yaml`**
+- **`infra/base/dapr/dapr-config.yaml`**
   Dapr configuration with tracing enabled and OTLP export to collector (`otel-collector:4317`).
 
-- **`infra/base/runtime/dapr-pubsub.yaml`**
+- **`infra/base/dapr/dapr-pubsub.yaml`**
   Base `order-pubsub` component (GCP pub/sub type).
 
 - **`infra/overlays/local/dapr-pubsub-patch.yaml`**
@@ -284,10 +284,13 @@ Optional full cleanup (remove control planes too):
 ### 🧩 Application Deployment Files
 
 - **`infra/base/apps/producer-ktor.yaml`**, **`infra/base/apps/producer-gin.yaml`**, **`infra/base/apps/producer-springboot.yaml`**
-  Producer deployments/services for each stack with Dapr sidecar annotations, OTEL env vars, probes, security context, and resource limits.
+  Producer deployments/services for each stack with Dapr sidecar annotations, OTEL env vars, probes, and resource limits.
 
 - **`infra/base/apps/consumer-ktor.yaml`**, **`infra/base/apps/consumer-gin.yaml`**, **`infra/base/apps/consumer-springboot.yaml`**
   Consumer deployments/services with Dapr annotations and subscription route config through app env vars.
+
+- **`infra/base/apps/common-deployment-hardening-patch.yaml`**
+  Shared hardening patch applied to all app Deployments (pod/container security context, read-only root filesystem, and `/tmp` emptyDir mount).
 
 - **`producer-ktor/src/main/kotlin/com/agnostic/producer/routes/ProducerRoutes.kt`**
   `POST /publish` endpoint, request validation, and publish path instrumentation/logging.
