@@ -3,13 +3,9 @@ resources:
   - ../../base/dapr
   - ../../base/apps
   - ../../base/observability
-  - crossplane-provider.yaml
-  - crossplane-function.yaml
-  - provider-config.yaml
-  - bus-claim.yaml
+  - ../common
 
 patches:
-  - path: dapr-pubsub-patch.yaml
   - target:
       group: apps
       version: v1

@@ -2,11 +2,10 @@ resources:
   - ../../base/dapr
   - ../../base/apps
   - ../../base/observability
-  - provider-config.yaml
-  - bus-claim.yaml
+  - ../common
 
 patches:
-  - path: dapr-pubsub-patch.yaml
+  - path: dapr-pubsub-endpoint-patch.yaml
   - path: grafana-local-auth-patch.yaml
 
 labels:

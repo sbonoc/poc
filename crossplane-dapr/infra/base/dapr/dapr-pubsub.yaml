@@ -7,7 +7,7 @@ spec:
   version: v1
   metadata:
     - name: projectId
-      value: local-project
+      value: ${GCP_PROJECT_ID}
 scopes:
   - producer-ktor
   - consumer-ktor

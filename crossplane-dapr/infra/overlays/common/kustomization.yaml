@@ -1,0 +1,3 @@
+resources:
+  - provider-config.yaml
+  - bus-claim.yaml

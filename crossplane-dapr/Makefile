@@ -28,7 +28,7 @@ PUSH_HISTORY ?= false
 RUN_ID ?=
 PUSHGATEWAY_LOCAL_PORT ?= 9091
 
-.PHONY: preflight bootstrap-control-planes build-images deploy-local wait-local teardown-local destroy-control-planes smoke-test
+.PHONY: preflight bootstrap-control-planes build-images render-local render-prod deploy-local wait-local teardown-local destroy-control-planes smoke-test
 .PHONY: unit-test integration-test contract-test e2e-test quality verify format run-producer-local run-consumer-local
 .PHONY: unit-test-ktor unit-test-springboot unit-test-gin integration-test-ktor integration-test-springboot integration-test-gin
 .PHONY: contract-test-ktor contract-test-springboot contract-test-gin e2e-test-ktor e2e-test-springboot e2e-test-gin
@@ -39,6 +39,8 @@ help:
 	@echo
 	@echo "Core targets:"
 	@echo "  help                  Show this help"
+	@echo "  render-local          Render local manifests with env substitutions"
+	@echo "  render-prod           Render prod manifests with env substitutions"
 	@echo "  deploy-local          Build images and deploy full local stack"
 	@echo "  wait-local            Wait for app/observability deployments to be available"
 	@echo "  port-forward-local    Port-forward all services, Loki, and Grafana locally"
@@ -120,13 +122,12 @@ build-images:
 	docker build -t agnostic-consumer-springboot:local -f consumer-springboot/Dockerfile .
 
 deploy-local: bootstrap-control-planes build-images
+	$(MAKE) render-local
 	kubectl create namespace $(APP_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
-	kubectl apply -k infra/base/crossplane
+	kubectl apply -k build/rendered/local/infra/overlays/local/crossplane
 	kubectl wait --for=condition=Established xrd/xmessagebuses.agnostic.systems --timeout=120s
-	kubectl apply -f infra/overlays/local/crossplane-runtime-config.yaml
-	kubectl apply -f infra/overlays/local/crossplane-provider.yaml
-	kubectl apply -f infra/overlays/local/crossplane-function.yaml
-	kubectl apply -f infra/overlays/local/emulator.yaml
+	kubectl apply -f build/rendered/local/infra/overlays/local/crossplane-runtime-config.yaml
+	kubectl apply -f build/rendered/local/infra/overlays/local/emulator.yaml
 	./scripts/create-local-gcp-emulator-secret.sh $(NAMESPACE_XP)
 	@echo "Waiting for pubsub provider API registration"
 	@for i in {1..36}; do \
@@ -137,9 +138,8 @@ deploy-local: bootstrap-control-planes build-images
 		echo "...still waiting ($$i/36)"; \
 		sleep 5; \
 		if [ $$i -eq 36 ]; then echo "Provider API registration timeout" && exit 1; fi; \
-	done
-	kubectl apply -k infra/overlays/local -n $(APP_NAMESPACE)
-	kubectl patch clusterrolebinding promtail --type='json' -p='[{"op":"replace","path":"/subjects/0/namespace","value":"$(APP_NAMESPACE)"}]'
+		done
+	kubectl apply -k build/rendered/local/infra/overlays/local -n $(APP_NAMESPACE)
 	@echo "Restarting app deployments to pick up rebuilt :local images"
 	@for deployment in producer-ktor consumer-ktor producer-gin consumer-gin producer-springboot consumer-springboot; do \
 		kubectl -n $(APP_NAMESPACE) rollout restart deployment/$$deployment >/dev/null 2>&1 || true; \
@@ -165,8 +165,9 @@ wait-local:
 	kubectl -n $(APP_NAMESPACE) wait --for=condition=available deployment/grafana --timeout=180s
 
 teardown-local:
-	kubectl delete -k infra/overlays/local -n $(APP_NAMESPACE) --ignore-not-found=true
-	kubectl delete -f infra/overlays/local/emulator.yaml --ignore-not-found=true
+	$(MAKE) render-local
+	kubectl delete -k build/rendered/local/infra/overlays/local -n $(APP_NAMESPACE) --ignore-not-found=true
+	kubectl delete -f build/rendered/local/infra/overlays/local/emulator.yaml --ignore-not-found=true
 	kubectl delete secret gcp-emulator-credentials -n $(NAMESPACE_XP) --ignore-not-found=true
 	kubectl delete -k infra/base/crossplane --ignore-not-found=true
 	@kubectl -n $(APP_NAMESPACE) wait --for=delete deployment/producer-ktor --timeout=120s >/dev/null 2>&1 || true
@@ -298,6 +299,12 @@ run-producer-local:
 
 run-consumer-local:
 	OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 OTEL_EXPORTER_OTLP_PROTOCOL=grpc ./gradlew :consumer-ktor:run
+
+render-local:
+	APP_NAMESPACE=$(APP_NAMESPACE) ./scripts/render-overlay.sh local
+
+render-prod:
+	APP_NAMESPACE=$(APP_NAMESPACE) ./scripts/render-overlay.sh prod
 
 port-forward-local:
 	@command -v kubectl >/dev/null || (echo "kubectl is required" && exit 1)

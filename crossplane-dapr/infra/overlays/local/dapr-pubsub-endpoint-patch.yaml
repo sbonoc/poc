@@ -5,6 +5,6 @@ metadata:
 spec:
   metadata:
     - name: projectId
-      value: local-project
+      value: ${GCP_PROJECT_ID}
     - name: endpoint
       value: gcp-emulator.crossplane-system.svc.cluster.local:8085

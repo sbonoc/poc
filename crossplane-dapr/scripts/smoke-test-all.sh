@@ -91,6 +91,7 @@ run_burst_test() {
   local service="$1"
   local url="$2"
   local failures=0
+  local request_pids=()
 
   printf 'Running burst test for %s at %s with %s requests\n' "${service}" "${url}" "${TOTAL_REQUESTS}"
 
@@ -107,22 +108,28 @@ run_burst_test() {
         exit 1
       fi
     ) &
+    request_pids+=("$!")
 
     if (( i % BATCH_SIZE == 0 )); then
-      for pid in $(jobs -p); do
-        if ! wait "${pid}"; then
-          failures=$((failures + 1))
-        fi
-      done
+      if (( ${#request_pids[@]} > 0 )); then
+        for pid in "${request_pids[@]}"; do
+          if ! wait "${pid}"; then
+            failures=$((failures + 1))
+          fi
+        done
+      fi
+      request_pids=()
       printf '%s: sent %s requests\n' "${service}" "${i}"
     fi
   done
 
-  for pid in $(jobs -p); do
-    if ! wait "${pid}"; then
-      failures=$((failures + 1))
-    fi
-  done
+  if (( ${#request_pids[@]} > 0 )); then
+    for pid in "${request_pids[@]}"; do
+      if ! wait "${pid}"; then
+        failures=$((failures + 1))
+      fi
+    done
+  fi
 
   if (( failures > 0 )); then
     echo "${service}: burst test failed with ${failures} request batch error(s)." >&2

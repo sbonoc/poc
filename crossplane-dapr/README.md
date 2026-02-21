@@ -148,7 +148,17 @@ Optional namespace override:
 APP_NAMESPACE=agnostic-local make deploy-local
 ```
 
-When `APP_NAMESPACE` is not `default`, `make deploy-local` also patches the Promtail ClusterRoleBinding subject namespace to keep log collection working.
+`make deploy-local` now renders manifests to `build/rendered/local/infra` using `env/local.env` defaults plus any shell overrides (for example `APP_NAMESPACE=agnostic-local`).
+This keeps deployment declarative and avoids imperative `kubectl patch` steps.
+
+You can render manifests explicitly:
+
+```bash
+make render-local
+make render-prod
+```
+
+Promtail stays cluster-wide and the ServiceAccount namespace in `ClusterRoleBinding` is rendered from `${APP_NAMESPACE}`.
 
 ### 3. Expose all services, Loki, and Grafana locally
 
@@ -252,17 +262,20 @@ Optional full cleanup (remove control planes too):
 - **`infra/base/crossplane/composition-messagebus.yaml`**
   Composition pipeline that maps a `MessageBus` claim into a concrete `pubsub.gcp.upbound.io/v1beta1 Topic` managed resource.
 
+- **`infra/base/crossplane/provider.yaml`** and **`infra/base/crossplane/function-patch-and-transform.yaml`**
+  Install shared Crossplane provider/function packages for both local and prod overlays.
+
 - **`infra/overlays/local/crossplane-runtime-config.yaml`**
-  Injects `PUBSUB_EMULATOR_HOST` into the Crossplane provider runtime so reconciliation targets the emulator.
+  Defines the runtime configuration used in local mode (`PUBSUB_EMULATOR_HOST`).
 
-- **`infra/overlays/local/crossplane-provider.yaml`**
-  Installs the GCP Pub/Sub provider package with the local runtime config.
+- **`infra/overlays/local/crossplane/kustomization.yaml`** and **`infra/overlays/local/crossplane/provider-runtime-config-patch.yaml`**
+  Declaratively attach `runtimeConfigRef=gcp-emulator-config` to `provider-gcp-pubsub` (no imperative `kubectl patch`).
 
-- **`infra/overlays/local/provider-config.yaml`**
-  Local `ProviderConfig` that points to emulator credentials secret.
+- **`env/local.env`**, **`env/prod.env`**, and **`scripts/render-overlay.sh`**
+  Environment-parameterized render layer used before apply. It substitutes `${APP_NAMESPACE}`, `${GCP_PROJECT_ID}`, `${PROVIDER_CONFIG_NAME}`, and `${GCP_SECRET_NAME}` into rendered manifests under `build/rendered/<env>/infra`.
 
-- **`infra/overlays/local/bus-claim.yaml`**
-  Developer-facing claim (`orders-bus`) requesting topic `orders`.
+- **`infra/overlays/common/provider-config.yaml`** and **`infra/overlays/common/bus-claim.yaml`**
+  Shared Crossplane runtime resources rendered per environment from `env/*.env` (`ProviderConfig` + developer-facing `MessageBus` claim).
 
 - **`scripts/create-local-gcp-emulator-secret.sh`**
   Generates emulator-only service account JSON and creates the secret in `crossplane-system`.
@@ -273,13 +286,10 @@ Optional full cleanup (remove control planes too):
   Dapr configuration with tracing enabled and OTLP export to collector (`otel-collector:4317`).
 
 - **`infra/base/dapr/dapr-pubsub.yaml`**
-  Base `order-pubsub` component (GCP pub/sub type).
+  Base `order-pubsub` component (GCP pub/sub type) where `projectId` is rendered from `${GCP_PROJECT_ID}`.
 
-- **`infra/overlays/local/dapr-pubsub-patch.yaml`**
-  Local patch sets `projectId=local-project` and emulator endpoint.
-
-- **`infra/overlays/prod/dapr-pubsub-patch.yaml`**
-  Production patch sets real project id and removes emulator dependency.
+- **`infra/overlays/local/dapr-pubsub-endpoint-patch.yaml`**
+  Local-only patch that adds emulator endpoint metadata.
 
 ### 🧩 Application Deployment Files
 
@@ -463,7 +473,7 @@ The application code remains unchanged. Migration is mostly manifest and secret 
 
 ### 2. Crossplane configuration
 
-- Use `infra/overlays/prod/provider-config.yaml` with real project id.
+- Set `GCP_PROJECT_ID`, `PROVIDER_CONFIG_NAME`, and `GCP_SECRET_NAME` in `env/prod.env` (used to render shared `ProviderConfig`/claim manifests).
 - Create GCP credentials secret in `crossplane-system`.
 
 ```bash
@@ -473,7 +483,7 @@ kubectl create secret generic gcp-secret -n crossplane-system \
 
 ### 3. Dapr pub/sub configuration
 
-- Use `infra/overlays/prod/dapr-pubsub-patch.yaml` to point component metadata to real project id.
+- `projectId` is injected into `infra/base/dapr/dapr-pubsub.yaml` during render from `env/prod.env`.
 - Ensure workload identity or equivalent auth strategy is configured in your target cluster.
 
 ### 4. Grafana security

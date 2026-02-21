@@ -1,0 +1,10 @@
+resources:
+  - ../../../base/crossplane
+
+patches:
+  - target:
+      group: pkg.crossplane.io
+      version: v1
+      kind: Provider
+      name: provider-gcp-pubsub
+    path: provider-runtime-config-patch.yaml
