@@ -4,6 +4,9 @@ metadata:
   name: consumer-ktor
   labels:
     app: consumer-ktor
+    app.kubernetes.io/name: consumer-ktor
+    app.kubernetes.io/component: consumer
+    agnostic.io/stack: ktor
 spec:
   replicas: 1
   selector:
@@ -13,6 +16,9 @@ spec:
     metadata:
       labels:
         app: consumer-ktor
+        app.kubernetes.io/name: consumer-ktor
+        app.kubernetes.io/component: consumer
+        agnostic.io/stack: ktor
       annotations:
         dapr.io/enabled: "true"
         dapr.io/app-id: "consumer-ktor"
@@ -39,6 +45,28 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: APP_SERVICE
+              value: consumer-ktor
+            - name: APP_ROLE
+              value: consumer
+            - name: APP_STACK
+              value: ktor
+            - name: APP_VERSION
+              value: "1.0.0"
+            - name: DEPLOYMENT_ENV
+              value: local
             - name: DAPR_PUBSUB_NAME
               value: order-pubsub
             - name: DAPR_TOPIC_NAME
@@ -52,7 +80,7 @@ spec:
             - name: OTEL_EXPORTER_OTLP_PROTOCOL
               value: grpc
             - name: OTEL_RESOURCE_ATTRIBUTES
-              value: deployment.environment=local,service.namespace=agnostic
+              value: deployment.environment=$(DEPLOYMENT_ENV),service.namespace=agnostic,service.name=$(APP_SERVICE),service.version=$(APP_VERSION),service.role=$(APP_ROLE),service.stack=$(APP_STACK),k8s.namespace.name=$(POD_NAMESPACE),k8s.pod.name=$(POD_NAME),k8s.node.name=$(NODE_NAME)
           resources:
             requests:
               cpu: 100m

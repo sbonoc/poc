@@ -266,7 +266,7 @@ data:
           "gridPos": {"h": 6, "w": 24, "x": 0, "y": 18},
           "options": {
             "mode": "markdown",
-            "content": "Use **Explore** with Tempo datasource and query by service names selected in the filters:\n- `{ resource.service.name=~\"$service\" }`\n\nAll services export traces through OTLP to the collector and store them in Tempo."
+            "content": "Use **Explore** with Tempo datasource and query by service names selected in the filters:\n- `{ resource.service.name=~\"$service\" }`\n\nUse **Explore** with Loki datasource for logs:\n- `{service=~\"$service\"}`\n\nAll services export traces through OTLP to the collector and store them in Tempo. Promtail ships Kubernetes logs to Loki with service/stack/role labels."
           }
         }
       ]

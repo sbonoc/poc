@@ -1,7 +1,6 @@
 package producer
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -58,6 +57,18 @@ func NewRouter(cfg Config, service *Service, registerer prometheus.Registerer, g
 			strconv.Itoa(c.Writer.Status()),
 		).Observe(time.Since(start).Seconds())
 	})
+	router.Use(func(c *gin.Context) {
+		traceID, spanID := requestTraceContext(c.Request)
+		requestLogger := logger.With(
+			"trace_id", traceID,
+			"span_id", spanID,
+			"http_method", c.Request.Method,
+			"http_path", c.Request.URL.Path,
+		)
+		c.Set(requestLoggerKey, requestLogger)
+		c.Request = c.Request.WithContext(withRequestLogger(c.Request.Context(), requestLogger))
+		c.Next()
+	})
 
 	router.GET("/health/live", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "UP"})
@@ -68,29 +79,33 @@ func NewRouter(cfg Config, service *Service, registerer prometheus.Registerer, g
 	router.GET("/metrics", gin.WrapH(promhttp.HandlerFor(gatherer, promhttp.HandlerOpts{})))
 
 	router.POST("/publish", func(c *gin.Context) {
+		requestLogger := loggerFromGinContext(c)
 		publishRequests.Inc()
+		requestLogger.Debug("received publish request")
 
 		var req PublishOrderRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			publishErrors.Inc()
+			requestLogger.Warn("invalid publish request payload", "error", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
 			return
 		}
 		if err := req.Validate(); err != nil {
 			publishErrors.Inc()
+			requestLogger.Warn("publish validation failed", "orderId", req.ID, "error", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		if err := service.Publish(c.Request.Context(), req); err != nil {
 			publishErrors.Inc()
-			log.Printf("publish failed orderId=%s err=%v", req.ID, err)
+			requestLogger.Error("publish failed", "orderId", req.ID, "error", err)
 			c.JSON(http.StatusBadGateway, gin.H{"error": "failed to publish event"})
 			return
 		}
 
 		publishedEvents.Inc()
-		log.Printf("published order event id=%s version=v1 pubsub=%s topic=%s", req.ID, cfg.PubSubName, cfg.TopicName)
+		requestLogger.Info("published order event", "id", req.ID, "version", "v1", "pubsub", cfg.PubSubName, "topic", cfg.TopicName)
 		c.JSON(http.StatusAccepted, gin.H{"status": "accepted", "orderId": req.ID})
 	})
 

@@ -3,6 +3,10 @@ resources:
   - otel-collector.yaml
   - tempo-config.yaml
   - tempo.yaml
+  - loki-config.yaml
+  - loki.yaml
+  - promtail-config.yaml
+  - promtail.yaml
   - prometheus-config.yaml
   - prometheus.yaml
   - pushgateway.yaml

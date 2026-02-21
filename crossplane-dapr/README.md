@@ -46,6 +46,8 @@ This stack addresses those problems:
 - **OpenTelemetry Collector** receives OTLP telemetry from apps.
 - **Tempo** stores traces.
 - **Prometheus** scrapes app and collector metrics.
+- **Loki** stores logs.
+- **Promtail** collects Kubernetes container logs and enriches them with pod labels/metadata.
 - **Grafana** visualizes dashboards (including Golden Signals).
 
 ```text
@@ -76,6 +78,7 @@ This stack addresses those problems:
 | [OBSERVABILITY]                                                          |
 | apps + daprd -> OTLP -> otel-collector -> tempo                         |
 |                                 -> prometheus -> grafana                |
+| kubernetes logs -> promtail -> loki -> grafana                          |
 |                                                                          |
 | [CROSSPLANE-SYSTEM]                                                      |
 | MessageBus claim -> XRD/Composition -> managed Topic                    |
@@ -112,6 +115,7 @@ This stack addresses those problems:
 - JVM/Kotlin and Spring Boot test orchestration is implemented as Gradle tasks (`./gradlew ...`).
 - Gin test orchestration is isolated under `scripts/gin/`:
   - `scripts/gin/run-suite.sh`
+  - `scripts/gin/quality-check.sh`
   - `scripts/gin/collect-test-pyramid.sh`
   - `scripts/gin/ensure-pact-cli.sh`
   - `scripts/gin/README.md` documents ownership and placement rules for Gin tooling.
@@ -144,7 +148,9 @@ Optional namespace override:
 APP_NAMESPACE=agnostic-local make deploy-local
 ```
 
-### 3. Expose all services and Grafana locally
+When `APP_NAMESPACE` is not `default`, `make deploy-local` also patches the Promtail ClusterRoleBinding subject namespace to keep log collection working.
+
+### 3. Expose all services, Loki, and Grafana locally
 
 ```bash
 make port-forward-local
@@ -159,6 +165,7 @@ producer-gin        -> http://localhost:8082
 consumer-gin        -> http://localhost:8083
 producer-springboot -> http://localhost:8084
 consumer-springboot -> http://localhost:8085
+loki                -> http://localhost:3100
 grafana             -> http://localhost:3000
 ```
 
@@ -186,7 +193,7 @@ make smoke-test
 
 `make smoke-test` runs burst traffic against all three producers (`producer-ktor`, `producer-gin`, `producer-springboot`). If the producer endpoints are not already exposed on localhost, it opens temporary port-forwards automatically.
 
-### 5. Open Grafana and inspect metrics/traces
+### 5. Open Grafana and inspect metrics/traces/logs
 
 - URL: `http://localhost:3000`
 - Local overlay enables anonymous admin for convenience.
@@ -203,6 +210,23 @@ To find traces in Tempo:
 2. Select `Tempo` datasource.
 3. Query `{ resource.service.name="producer-ktor" }` or `{ resource.service.name="consumer-ktor" }` (Ktor traces are enabled by default).
 4. If empty, generate traffic with `make smoke-test` and query last 30 minutes.
+
+To inspect logs in Loki:
+
+1. Open Grafana `Explore`.
+2. Select `Loki` datasource.
+3. Query by labels, for example: `{service="producer-gin"}` or `{service=~"consumer-.*", stack="springboot"}`.
+
+For trace correlation from logs, Gin and Spring Boot request logs include:
+- `trace_id`
+- `span_id`
+- `http_method`
+- `http_path`
+
+Low-cardinality context (`service`, `stack`, `role`, `namespace`, `env`) is added by Promtail from Kubernetes metadata/labels. High-cardinality values (`trace_id`, `span_id`, `orderId`) stay in log payload for query-time filtering.
+
+Kubernetes contextual values are injected in existing Deployment manifests (`infra/base/apps/*.yaml`) via Downward API env vars (`POD_NAMESPACE`, `POD_NAME`, `NODE_NAME`) and app identity vars (`APP_SERVICE`, `APP_STACK`, `APP_ROLE`, `APP_VERSION`, `DEPLOYMENT_ENV`) for OTEL resource attributes.  
+The prod overlay (`infra/overlays/prod/apps-env-patch.yaml`) overrides `DEPLOYMENT_ENV=prod`.
 
 ### 6. Teardown
 
@@ -279,6 +303,12 @@ Optional full cleanup (remove control planes too):
 - **`infra/base/observability/tempo-config.yaml`**
   Tempo local storage and OTLP receiver config.
 
+- **`infra/base/observability/loki-config.yaml`** and **`infra/base/observability/loki.yaml`**
+  Loki single-binary deployment/service for centralized log storage.
+
+- **`infra/base/observability/promtail-config.yaml`** and **`infra/base/observability/promtail.yaml`**
+  Promtail daemonset + RBAC that tails Kubernetes container logs and adds labels such as `service`, `stack`, `role`, `namespace`, and `env`.
+
 - **`infra/base/observability/prometheus-config.yaml`**
   Scrape jobs for `otel-collector`, all producer/consumer implementations, and `pushgateway` (for test metrics).
 
@@ -286,7 +316,7 @@ Optional full cleanup (remove control planes too):
   Pushgateway deployment/service used to ingest both latest-run and historical test-pyramid metrics from local and CI.
 
 - **`infra/base/observability/grafana-datasources.yaml`**
-  Provisioned datasources for Prometheus and Tempo.
+  Provisioned datasources for Prometheus, Tempo, and Loki, including trace-id derived fields from logs to Tempo.
 
 - **`infra/base/observability/grafana-dashboards.yaml`**
   Provisioned dashboards including Golden Signals (traffic, latency, errors, saturation) for both services.
@@ -315,7 +345,7 @@ Optional full cleanup (remove control planes too):
 
 ## 🧪 Shift-Left Test Strategy
 
-The test pyramid is codified as separate Gradle suites in each module:
+The test pyramid is codified as separate suites per stack (Gradle for Ktor/Spring Boot, `scripts/gin/run-suite.sh` for Gin):
 
 - Unit tests first (`test`) and most numerous.
 - Fewer integration tests (`integrationTest`).
@@ -335,6 +365,9 @@ make push-test-pyramid-history
 make quality
 make verify
 ```
+
+- `make quality` runs JVM static/coverage checks plus Gin `gofmt` validation, `go vet`, and unit tests.
+- `make verify` runs full JVM verification plus Gin quality checks, integration, and contract suites.
 
 Publish test metrics to Grafana:
 
@@ -396,7 +429,7 @@ RUN_ID=my-release-2026-02-20 make push-test-pyramid-history
 
 CI publishing:
 
-- In GitHub Actions, set repository secret `PUSHGATEWAY_URL` to enable publishing stack and service test-pyramid metrics from `.github/workflows/crossplane-dapr.yml`.
+- In GitHub Actions, set repository secret `PUSHGATEWAY_URL` to enable publishing stack and service test-pyramid metrics from `../.github/workflows/crossplane-dapr.yml` (repository root).
 - CI publishes latest metrics only (`test-pyramid-latest-<stack-or-service>`).
 - GitHub Actions step summary and uploaded artifacts are split into two sections: by stack and by service.
 - If the secret is not set, CI still runs all tests, but metrics are not pushed.
@@ -413,7 +446,7 @@ It validates CDC independently per pair:
 - `consumer-springboot` -> `producer-springboot` (`consumer-springboot/pacts/*.json`)
 - `consumer-gin` -> `producer-gin` (`consumer-gin/pacts/*.json`)
 
-CI pipeline is in **`.github/workflows/crossplane-dapr.yml`**, enforcing Shift-Left gates (unit, static checks, integration, contract, coverage) with E2E smoke only on manual dispatch.
+CI pipeline is in **`../.github/workflows/crossplane-dapr.yml`** (repository root), enforcing Shift-Left gates (unit, static checks, integration, contract, coverage) with E2E smoke only on manual dispatch.
 
 ---
 

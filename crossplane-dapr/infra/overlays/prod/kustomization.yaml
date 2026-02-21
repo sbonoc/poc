@@ -16,22 +16,22 @@ patches:
 images:
   - name: agnostic-producer-ktor
     newName: ghcr.io/your-org/agnostic-producer-ktor
-    newTag: latest
+    newTag: v1.0.0
   - name: agnostic-consumer-ktor
     newName: ghcr.io/your-org/agnostic-consumer-ktor
-    newTag: latest
+    newTag: v1.0.0
   - name: agnostic-producer-gin
     newName: ghcr.io/your-org/agnostic-producer-gin
-    newTag: latest
+    newTag: v1.0.0
   - name: agnostic-consumer-gin
     newName: ghcr.io/your-org/agnostic-consumer-gin
-    newTag: latest
+    newTag: v1.0.0
   - name: agnostic-producer-springboot
     newName: ghcr.io/your-org/agnostic-producer-springboot
-    newTag: latest
+    newTag: v1.0.0
   - name: agnostic-consumer-springboot
     newName: ghcr.io/your-org/agnostic-consumer-springboot
-    newTag: latest
+    newTag: v1.0.0
 
 labels:
   - pairs:

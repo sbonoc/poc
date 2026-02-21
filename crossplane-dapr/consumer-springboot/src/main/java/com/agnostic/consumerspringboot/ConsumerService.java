@@ -28,6 +28,11 @@ class ConsumerService {
     }
 
     ResponseEntity<List<Map<String, String>>> subscriptions() {
+        logger.debug(
+            "returning dapr subscription route={} pubsub={} topic={}",
+            config.normalizedRoute(),
+            config.pubsubName(),
+            config.topicName());
         return ResponseEntity.ok(
             List.of(
                 Map.of(
@@ -38,11 +43,13 @@ class ConsumerService {
 
     ResponseEntity<Void> consume(JsonNode payload) {
         consumeRequests.increment();
+        logger.debug("processing consume payload route={}", config.normalizedRoute());
 
         JsonNode eventNode = payload.has("data") ? payload.get("data") : payload;
         JsonNode idNode = eventNode.get("id");
         if (idNode == null || idNode.asText().isBlank()) {
             consumeErrors.increment();
+            logger.warn("rejecting consume payload without id route={}", config.normalizedRoute());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 

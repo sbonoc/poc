@@ -42,4 +42,4 @@ if [[ "${with_port_forward}" == "true" ]]; then
 fi
 
 echo "Deployment finished."
-echo "Run 'make port-forward-local' to expose all apps and grafana."
+echo "Run 'make port-forward-local' to expose all apps, Loki, and Grafana."

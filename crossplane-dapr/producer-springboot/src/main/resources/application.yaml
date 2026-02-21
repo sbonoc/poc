@@ -19,3 +19,9 @@ app:
     pubsub-name: ${DAPR_PUBSUB_NAME:order-pubsub}
     topic-name: ${DAPR_TOPIC_NAME:orders}
     http-port: ${DAPR_HTTP_PORT:3500}
+
+logging:
+  level:
+    com.agnostic: ${LOG_LEVEL:INFO}
+  pattern:
+    level: "%5p trace_id=%X{trace_id:-unknown} span_id=%X{span_id:-unknown} method=%X{http_method:-unknown} path=%X{http_path:-unknown}"

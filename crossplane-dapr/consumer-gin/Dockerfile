@@ -1,7 +1,7 @@
 FROM golang:1.23-alpine AS build
 WORKDIR /src
 
-COPY consumer-gin/go.mod ./consumer-gin/go.mod
+COPY consumer-gin/go.mod consumer-gin/go.sum ./consumer-gin/
 WORKDIR /src/consumer-gin
 RUN go mod download
 

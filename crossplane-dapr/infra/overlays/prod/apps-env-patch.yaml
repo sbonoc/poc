@@ -9,8 +9,8 @@ spec:
         - name: producer-ktor
           imagePullPolicy: Always
           env:
-            - name: OTEL_RESOURCE_ATTRIBUTES
-              value: deployment.environment=prod,service.namespace=agnostic
+            - name: DEPLOYMENT_ENV
+              value: prod
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -23,8 +23,8 @@ spec:
         - name: consumer-ktor
           imagePullPolicy: Always
           env:
-            - name: OTEL_RESOURCE_ATTRIBUTES
-              value: deployment.environment=prod,service.namespace=agnostic
+            - name: DEPLOYMENT_ENV
+              value: prod
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -37,8 +37,8 @@ spec:
         - name: producer-gin
           imagePullPolicy: Always
           env:
-            - name: OTEL_RESOURCE_ATTRIBUTES
-              value: deployment.environment=prod,service.namespace=agnostic
+            - name: DEPLOYMENT_ENV
+              value: prod
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -51,8 +51,8 @@ spec:
         - name: consumer-gin
           imagePullPolicy: Always
           env:
-            - name: OTEL_RESOURCE_ATTRIBUTES
-              value: deployment.environment=prod,service.namespace=agnostic
+            - name: DEPLOYMENT_ENV
+              value: prod
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -65,8 +65,8 @@ spec:
         - name: producer-springboot
           imagePullPolicy: Always
           env:
-            - name: OTEL_RESOURCE_ATTRIBUTES
-              value: deployment.environment=prod,service.namespace=agnostic
+            - name: DEPLOYMENT_ENV
+              value: prod
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -79,5 +79,5 @@ spec:
         - name: consumer-springboot
           imagePullPolicy: Always
           env:
-            - name: OTEL_RESOURCE_ATTRIBUTES
-              value: deployment.environment=prod,service.namespace=agnostic
+            - name: DEPLOYMENT_ENV
+              value: prod

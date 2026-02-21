@@ -2,7 +2,10 @@
 
 package consumer
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestNormalizeRoute(t *testing.T) {
 	t.Parallel()
@@ -30,7 +33,7 @@ func TestNormalizeRoute(t *testing.T) {
 func TestParseOrderEvent(t *testing.T) {
 	t.Parallel()
 
-	event, err := ParseOrderEvent([]byte(`{"data":{"id":"ORD-1","amount":10,"eventVersion":"v1"}}`))
+	event, err := ParseOrderEvent(context.Background(), []byte(`{"data":{"id":"ORD-1","amount":10,"eventVersion":"v1"}}`))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

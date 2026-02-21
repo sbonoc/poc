@@ -1,4 +1,4 @@
-package com.agnostic.consumerspringboot;
+package com.agnostic.producerspringboot;
 
 import java.util.Map;
 import org.slf4j.Logger;
@@ -23,3 +23,4 @@ class HealthController {
         return ResponseEntity.ok(Map.of("status", "UP"));
     }
 }
+

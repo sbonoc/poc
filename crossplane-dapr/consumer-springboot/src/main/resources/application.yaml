@@ -19,3 +19,9 @@ app:
     pubsub-name: ${DAPR_PUBSUB_NAME:order-pubsub}
     topic-name: ${DAPR_TOPIC_NAME:orders}
     route: ${DAPR_SUBSCRIPTION_ROUTE:/orders}
+
+logging:
+  level:
+    com.agnostic: ${LOG_LEVEL:INFO}
+  pattern:
+    level: "%5p trace_id=%X{trace_id:-unknown} span_id=%X{span_id:-unknown} method=%X{http_method:-unknown} path=%X{http_path:-unknown}"

@@ -13,6 +13,9 @@ This directory contains automation that applies to the **Gin stack as a whole** 
 - `run-suite.sh`  
   Runs Gin test suites (`unit`, `integration`, `contract`, `e2e`) across both services.
 
+- `quality-check.sh`
+  Runs Gin quality gates comparable to JVM stack checks: `gofmt` validation, `go vet`, and unit tests across both services.
+
 - `collect-test-pyramid.sh`  
   Collects Gin test-pyramid metrics and writes stack/service reports under `build/reports/test-pyramid`.
 
