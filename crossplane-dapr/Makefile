@@ -301,9 +301,15 @@ run-consumer-local:
 	OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 OTEL_EXPORTER_OTLP_PROTOCOL=grpc ./gradlew :consumer-ktor:run
 
 render-local:
+	@[ -x ./scripts/render-overlay.sh ] || (echo "scripts/render-overlay.sh is required and must be executable" >&2 && exit 1)
+	@command -v envsubst >/dev/null || (echo "envsubst is required by scripts/render-overlay.sh" >&2 && exit 1)
+	@command -v rg >/dev/null >/dev/null || (echo "rg (ripgrep) is required by scripts/render-overlay.sh" >&2 && exit 1)
 	APP_NAMESPACE=$(APP_NAMESPACE) ./scripts/render-overlay.sh local
 
 render-prod:
+	@[ -x ./scripts/render-overlay.sh ] || (echo "scripts/render-overlay.sh is required and must be executable" >&2 && exit 1)
+	@command -v envsubst >/dev/null || (echo "envsubst is required by scripts/render-overlay.sh" >&2 && exit 1)
+	@command -v rg >/dev/null >/dev/null || (echo "rg (ripgrep) is required by scripts/render-overlay.sh" >&2 && exit 1)
 	APP_NAMESPACE=$(APP_NAMESPACE) ./scripts/render-overlay.sh prod
 
 port-forward-local:
